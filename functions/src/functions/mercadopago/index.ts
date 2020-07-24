@@ -36,7 +36,7 @@ app.post("/", async (req, res) => {
     if (event) {
         const topic = `${functions.config().google_pub_sub.topic_prefix}${event}`
         functions.logger.info(`${prefix} Emitting ${event}`);
-        let messageId = await pubSubClient
+        const messageId = await pubSubClient
             .topic(topic)
             .publish(Buffer.from(JSON.stringify(req.body)), {
                 id: req.body.data.id,
