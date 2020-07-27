@@ -1,13 +1,15 @@
 import * as functions from 'firebase-functions';
 import { Client, ClientOptions } from '@elastic/elasticsearch';
 
+import config from '../config';
+
 const prefix = '[elastic client]';
 
 const clientOptions: ClientOptions = {
-  node: functions.config().elastic.node,
+  node: config.get('elastic.node'),
 };
-const username = functions.config().elastic.username;
-const password = functions.config().elastic.password;
+const username = config.get('elastic.username');
+const password = config.get('elastic.password');
 const withBasicAuth = username && password;
 if (withBasicAuth) {
   clientOptions.auth = { username, password };

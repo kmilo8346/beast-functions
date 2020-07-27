@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import { PubSub } from '@google-cloud/pubsub';
 
+import config from '../../lib/config';
+
 const app = express();
 app.use(cors({ origin: true }));
 app.use(express.urlencoded());
@@ -34,7 +36,7 @@ app.post("/", async (req, res) => {
             break;
     }
     if (event) {
-        const topic = `${functions.config().google_pub_sub.topic_prefix}${event}`
+        const topic = `${config.get('google_pub_sub.topic_prefix')}${event}`
         functions.logger.info(`${prefix} Emitting ${event}`);
         const messageId = await pubSubClient
             .topic(topic)

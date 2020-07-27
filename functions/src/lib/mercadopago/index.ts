@@ -1,9 +1,10 @@
 // @ts-ignore
 import mercadopago from "mercadopago";
-import * as functions from "firebase-functions";
+
+import config from '../../lib/config'
 
 mercadopago.configure({
-  access_token: functions.config().mercado_pago.access_token,
+  access_token: config.get('mercado_pago.access_token'),
 });
 
 export default mercadopago;

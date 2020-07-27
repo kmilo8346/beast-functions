@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 
+import config from '../../../../lib/config';
 import mercadopago from '../../../../lib/mercadopago';
 import utils from '../../../../lib/utils';
 
@@ -54,7 +55,7 @@ class GatewayPaymentClient {
         last_name: data.customer.last_name,
       },
       external_reference: `${externalReference}|${data.index}`,
-      notification_url: `${functions.config().mercado_pago.notification_url}?source_news=webhooks`
+      notification_url: `${config.get('mercado_pago.notification_url')}?source_news=webhooks`
     }
     try {
       // setting seller credentials to execute the payment
@@ -84,7 +85,7 @@ class GatewayPaymentClient {
       }
     } finally {
       mercadopago.configure({
-        access_token: functions.config().mercado_pago.access_token,
+        access_token: config.get('mercado_pago.access_token'),
       });
     }
   }

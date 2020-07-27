@@ -8,3 +8,9 @@ typings/
 node_modules/
 
 .runtimeconfig.json
+
+src/admin/env.json
+src/admin/env.development.json
+src/admin/env.staging.json
+src/admin/env.production.json
+src/admin/env.test.json

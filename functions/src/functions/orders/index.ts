@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import { PubSub } from '@google-cloud/pubsub';
 
+import config from '../../lib/config';
 import orderClient from './clients/order-client';
 import gatewayPaymentClient from './clients/gateway-payment-client';
 
@@ -91,7 +92,7 @@ exports.updateGatewayDetails = functions.pubsub.topic('payment.updated').onPubli
         functions.logger.info(`${prefix} Gateway details was updated :)`);
 
         const event = `order.${status}`;
-        const topic = `${functions.config().google_pub_sub.topic_prefix}${event}`
+        const topic = `${config.get('google_pub_sub.topic_prefix')}${event}`
         functions.logger.info(`${prefix} Emitting ${event}`);
         const messageId = await pubSubClient
             .topic(topic)
