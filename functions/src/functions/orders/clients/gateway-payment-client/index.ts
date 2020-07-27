@@ -1,44 +1,18 @@
 import * as functions from "firebase-functions";
 
-import elastic from "../../../../lib/elastic";
 import mercadopago from '../../../../lib/mercadopago';
 import utils from '../../../../lib/utils';
 
-const prefix = "[payment client]";
+const prefix = "[gateway payment client]";
 
-class PaymentClient {
+class GatewayPaymentClient {
   /**
-   * Get a payment
-   * @param id
-   * @param index
-   * @returns Promise<Payment|null>
-   */
-  public async get(id: string, index: string,) {
-    try {
-      const response = await elastic.get({
-        id,
-        index,
-      });
-      
-      return {
-        ...response.body._source,
-        id: response.body._id,
-        index: response.body._index,
-      };
-    } catch (error) {
-      functions.logger.debug({ index, id });
-      functions.logger.error(error);
-      throw new Error(`${prefix} Unexpected error getting payment`);
-    }
-  }
-
-  /**
-   * Execute payment in payment gateway
-   * @param id 
+   * Execute payment
+   * @param externalReference 
    * @param data 
    * @returns Promise<GatewayData>
    */
-  public async executePayment(id: string, data: any) {
+  public async executePayment(externalReference: string, data: any) {
     let createCardTokenResponse: any;
     try {
       createCardTokenResponse = await mercadopago.card_token.create(
@@ -48,7 +22,7 @@ class PaymentClient {
         },
       );
     } catch (error) {
-      functions.logger.debug({id, data});
+      functions.logger.debug({externalReference, data});
       functions.logger.error(error);
       throw new Error(`${prefix} Unexpected error creating card token`);
     }
@@ -79,7 +53,7 @@ class PaymentClient {
         first_name: data.customer.first_name,
         last_name: data.customer.last_name,
       },
-      external_reference: `${id}|${data.index}`,
+      external_reference: `${externalReference}|${data.index}`,
       notification_url: `${functions.config().mercado_pago.notification_url}?source_news=webhooks`
     }
     try {
@@ -91,11 +65,11 @@ class PaymentClient {
       createPaymentResponse = await mercadopago.payment.create(payment);
       return createPaymentResponse.body;
     } catch (error) {
-      functions.logger.debug({id, data});
+      functions.logger.debug({externalReference, data});
       functions.logger.error(error);
 
       try {
-        functions.logger.info(`${prefix} Retrying payment in mercado pago using idempotency id`);
+        functions.logger.info(`${prefix} Retrying payment using idempotency id`);
         createPaymentResponse = await mercadopago.payment.create(payment,  {
           qs: {
             idempotency: error.idempotency,
@@ -103,7 +77,7 @@ class PaymentClient {
         });
         return createPaymentResponse.body;
       } catch (error) {
-        functions.logger.debug({id, data});
+        functions.logger.debug({externalReference, data});
         functions.logger.error(error);
 
         throw new Error(`${prefix} Unexpected error executing payment`);
@@ -115,55 +89,18 @@ class PaymentClient {
     }
   }
 
-  /**
-   * 
-   * @param index 
-   * @param paymentId 
-   * @param data 
-   */
-  public async createPending(index: string, paymentId: string, data: any) {
+  public async getPayment(id: string) {
     try {
-      const payment = {
-        status: 'pending',
-        payment_id: paymentId,
-        order_id: data.order_id,
-        shop_intent_id: data.id,
-        customer: data.customer,
-        transaction: data.transaction,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-      const response = await elastic.index({
-        index,
-        refresh: "true",
-        body: payment,
-      });
-      return {
-        ...payment,
-        id: response.body._id,
-      };
+      const response = await mercadopago.payment.get(id);
+      return response.body;
     } catch (error) {
-      functions.logger.debug({ index, paymentId, data,});
+      functions.logger.debug({id});
       functions.logger.error(error);
-      throw new Error(`${prefix} Unexpected error creating pending payment`);
+
+      throw new Error(`${prefix} Unexpected error getting payment`);
     }
   }
 
-  public async update(index: string, id: string, data: any) {
-    try {
-      await elastic.update({
-        index,
-        id,
-        body: {
-          doc: data,
-        },
-      });
-    } catch (error) {
-      functions.logger.debug({ index, id, data,});
-      functions.logger.error(error);
-      throw new Error(`${prefix} Unexpected error updating payment`);
-    }
-  }
 }
 
-export default new PaymentClient();
+export default new GatewayPaymentClient();

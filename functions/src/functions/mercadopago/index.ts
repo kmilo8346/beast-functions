@@ -19,7 +19,7 @@ app.post("/", async (req, res) => {
     switch(req.body.type) {
         case "payment":
             if (data.action === 'payment.created' || data.action === 'payment.updated') {
-                event = 'mercadopago-payments.updated';
+                event = 'payment.updated';
             }
             if (!event) {
                 functions.logger.warn(`${prefix} Webhook action not mapped, action: ${req.body.action}`);
@@ -51,6 +51,7 @@ app.post("/", async (req, res) => {
     functions.logger.debug(req.body);
     functions.logger.error(error);
     functions.logger.error(`${prefix} Unexpected error listening mercado pago webhooks`);
+    
     res.status(500).json({
       message: error.message,
     });

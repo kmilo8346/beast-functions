@@ -4,7 +4,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId || (request.auth.uid!=null && resource.data.email == null);
     }
-    match /payments/{paymentId} {
+    match /orders/{orderId} {
       allow read, write: if true;
     }
   }
