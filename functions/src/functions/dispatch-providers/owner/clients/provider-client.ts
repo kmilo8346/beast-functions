@@ -50,7 +50,7 @@ class ProviderClient {
 
       // emit order created
       const event = `order.created`;
-      const topic = `${config.get("google_pub_sub.topic_prefix")}${event}`;
+      const topic = `${config.get("google_pub_sub.topic_prefix")}/${event}`;
       const messageId = await pubSubClient
         .topic(topic)
         .publish(Buffer.from(JSON.stringify(order)), {

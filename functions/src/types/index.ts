@@ -9,7 +9,23 @@ export interface UpdateParams<T> {
   body: Partial<T>;
 }
 
-export type SortParam = { field: string; order: "asc" | "desc" }[];
+export interface ActionParams<T> {
+  idempotency?: string;
+  body: Partial<T>;
+}
+
+export interface GetParams {
+  id: string;
+  source?: string[];
+}
+
+export interface GetAllParams {
+  from: number;
+  size: number;
+  source?: string[];
+}
+
+export type SortParam = { field: string; order: 'asc' | 'desc' }[];
 
 export interface SearchParams {
   query?: string;
@@ -60,6 +76,40 @@ export type OpeningHours = {
   open: number;
   close: number;
 }[];
+
+export interface Card {
+  id: string;
+  customer_id: string;
+  expiration_month: number;
+  expiration_year: number;
+  first_six_digits: string;
+  last_four_digits: string;
+  payment_method: {
+    id: string;
+    name: string;
+    payment_type_id: string;
+    thumbnail: string;
+    secure_thumbnail: string;
+  };
+  security_code: {
+    length: number;
+    card_location: string;
+  };
+  issuer: {
+    id: number;
+    name: string;
+  };
+  cardholder: {
+    name: string;
+    identification: {
+      number: string;
+      type: string;
+    };
+  };
+  live_mode: boolean;
+  date_created: string;
+  date_last_updated: string;
+}
 
 export interface Place {
   id: string;
@@ -129,6 +179,18 @@ export interface Product {
   store: Store;
 }
 
+export interface Service {
+  id: string;
+  type: 'service';
+  name: string;
+  description: string;
+  images: string[];
+  price: number | null;
+  tags?: string[];
+  enabled: boolean;
+  store: Store;
+}
+
 export interface Customer {
   id: string;
   email: string;
@@ -157,6 +219,13 @@ export interface CreatePayment {
   redirect_url: string;
 }
 
+export interface CreateCheckout {
+  reference: string;
+  customer: Customer;
+  transaction: Transaction;
+  redirect_url: string;
+}
+
 export enum MercadopagoPaymentStatus {
   STARTED = 'started',
   PENDING = 'pending',
@@ -173,7 +242,7 @@ export enum MercadopagoPaymentStatus {
 export type PaymentProviderState = {
   id: PaymentProvider.MERCADOPAGO;
   status: MercadopagoPaymentStatus;
-  checkout: {id: string; init_point: string};
+  checkout: { id: string; init_point: string };
   data: { [key: string]: any };
 };
 

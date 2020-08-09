@@ -31,6 +31,7 @@ class ProviderClient {
         functions.logger.warn(
           `${prefix} Not payment found using external reference from mercadopago, reference: ${response.body.external_reference}`
         );
+        return;
       }
       const payment = result.hits[0];
 
@@ -56,7 +57,7 @@ class ProviderClient {
               ...update
           }
         const event = `payment.approved`;
-        const topic = `${config.get('google_pub_sub.topic_prefix')}${event}`
+        const topic = `${config.get('google_pub_sub.topic_prefix')}/${event}`
         const messageId = await pubSubClient
             .topic(topic)
             .publish(Buffer.from(JSON.stringify(updatedPayment)), {

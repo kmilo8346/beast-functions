@@ -92,7 +92,7 @@ exports.updateGatewayDetails = functions.pubsub.topic('payment.updated').onPubli
         functions.logger.info(`${prefix} Gateway details was updated :)`);
 
         const event = `order.${status}`;
-        const topic = `${config.get('google_pub_sub.topic_prefix')}${event}`
+        const topic = `${config.get('google_pub_sub.topic_prefix')}/${event}`
         functions.logger.info(`${prefix} Emitting ${event}`);
         const messageId = await pubSubClient
             .topic(topic)
