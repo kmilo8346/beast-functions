@@ -18,7 +18,7 @@ app.use(express.json());
 
 app.use('/payment-providers', paymentProviders.router)
 
-exports.api = functions.https.onRequest(app);
+exports.beast = functions.https.onRequest(app);
 
 exports.dispatchProviders = dispatchProviders.listeners;
 

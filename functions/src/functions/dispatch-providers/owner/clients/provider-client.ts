@@ -32,9 +32,9 @@ class ProviderClient {
         size: 1,
       });
       if (searchResponse.hits.length) {
-        const order = searchResponse.hits[0];
+        const createdOrder = searchResponse.hits[0];
         functions.logger.info(
-          `${prefix} Order with reference ${payment.reference} is already created, id: ${order.id}, status: ${order.status}`
+          `${prefix} Order with reference ${payment.reference} is already created, id: ${createdOrder.id}, status: ${createdOrder.status}`
         );
         return;
       }
