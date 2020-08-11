@@ -40,12 +40,8 @@ const orderDelivered = functions.pubsub
     functions.logger.info(`${prefix} Order delivered notification, was sended, notification id: ${response.id}`)
   });
 
-const orderCancelled = functions.pubsub
-  .topic("order.cancelled")
-  .onPublish(async (message) => {});
 
 export default {
   orderConfirmed,
   orderDelivered,
-  orderCancelled,
 };
