@@ -1,10 +1,8 @@
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
 import camelCaseKeys from "camelcase-keys";
+import * as admin from "firebase-admin";
 
 import { Order } from "../../../types";
-
-admin.initializeApp();
 
 /**
  * Convert to camel case and remove unecesary fields to avoid overload front

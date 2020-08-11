@@ -1,3 +1,5 @@
+import { ExpoPushTicket, ExpoPushReceipt } from 'expo-server-sdk';
+
 export interface CreateParams<T> {
   body: T;
   source?: string[];
@@ -307,6 +309,51 @@ export interface Order extends CreateOrder {
   id: string;
   status: OrderStatus;
   provider: DispatchProviderState;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateDevice {
+  token: string;
+  user_id: string;
+}
+
+export interface Device extends CreateDevice {
+  id: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface NotificationFilters {
+  user: string;
+}
+
+export interface NotificationMessage {
+  title: string;
+  body?: string;
+  data?: { [key: string]: any };
+  ttl?: number;
+  expiration?: number;
+  priority?: 'default' | 'normal' | 'high';
+}
+
+export interface CreateNotification {
+  filters: NotificationFilters;
+  message: NotificationMessage;
+}
+
+export enum NotificationStatus {
+  CREATED = 'created',
+  VALIDATED = 'validated',
+}
+
+export interface Notification extends CreateNotification {
+  id: string;
+  status: NotificationStatus;
+  tikets: ExpoPushTicket[];
+  receipts?: {
+    [id: string]: ExpoPushReceipt;
+  };
   created_at: Date;
   updated_at: Date;
 }
