@@ -96,7 +96,7 @@ class NotificationClient {
           size: 1,
         });
         if (searchNotificationsResponse.hits.length) {
-          const alreadyCreated = searchNotificationsResponse.hits[0] as Notification;
+          const alreadyCreated = searchNotificationsResponse.hits[0];
           functions.logger.info(
             `${prefix} Notification is already created, returning notification, id ${alreadyCreated.id}`,
           );
