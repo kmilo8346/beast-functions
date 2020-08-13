@@ -1,13 +1,9 @@
 import * as functions from "firebase-functions";
 
-import elastic from '../../elastic';
-import {
-  SearchParams,
-  SearchResponse,
-  Device,
-} from '../../../types';
+import elastic from "../../elastic";
+import { SearchParams, SearchResponse, Device } from "../../../types";
 
-const prefix = '[device client]';
+const prefix = "[device client]";
 
 class DeviceClient {
   /**
@@ -19,10 +15,10 @@ class DeviceClient {
       // filters
       const must: any[] = [];
       if (params.filters) {
-        if (params.filters.user) {
+        if ("user" in params.filters) {
           must.push({
             match_phrase: {
-              'user_id.keyword': {
+              "user_id.keyword": {
                 query: params.filters.user,
               },
             },
@@ -31,15 +27,15 @@ class DeviceClient {
       }
 
       // sort
-      let sort: { [key: string]: { order: 'desc' | 'asc' } }[] = [
-        { updated_at: { order: 'desc' } },
+      let sort: { [key: string]: { order: "desc" | "asc" } }[] = [
+        { updated_at: { order: "desc" } },
       ];
       if (params.sort) {
         sort = params.sort.map((s) => ({ [s.field]: { order: s.order } }));
       }
 
       const response = await elastic.search({
-        index: 'devices-*',
+        index: "devices-*",
         body: {
           query: {
             bool: {
@@ -67,6 +63,40 @@ class DeviceClient {
       functions.logger.error(error);
 
       throw new Error(`${prefix} Unexpected error searching devices`);
+    }
+  }
+
+  /**
+   * Delete devices by token
+   * @param token string
+   * @returns Promise<void>
+   */
+  async deleteByToken(token: string): Promise<void> {
+    try {
+      const response = await elastic.deleteByQuery({
+        index: "devices-*",
+        body: {
+          query: {
+            bool: {
+              must: [
+                {
+                  match_phrase: {
+                    "token.keyword": {
+                      query: token,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      });
+      functions.logger.info("deleteByToken", JSON.stringify(response));
+    } catch (error) {
+      functions.logger.debug({ token });
+      functions.logger.error(error);
+
+      throw new Error(`${prefix} Unexpected error deleting devices by token`);
     }
   }
 }

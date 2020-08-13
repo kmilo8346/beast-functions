@@ -1,4 +1,4 @@
-import { ExpoPushTicket, ExpoPushReceipt } from 'expo-server-sdk';
+import { ExpoPushTicket, ExpoPushReceipt, ExpoPushMessage } from 'expo-server-sdk';
 
 export interface CreateParams<T> {
   body: T;
@@ -156,6 +156,7 @@ export enum DispatchProvider {
 
 export interface Store {
   id: string;
+  user: string;
   version: number;
   name: string;
   phone: string;
@@ -328,13 +329,7 @@ export interface NotificationFilters {
   user: string;
 }
 
-export interface NotificationMessage {
-  title: string;
-  body?: string;
-  data?: { [key: string]: any };
-  ttl?: number;
-  expiration?: number;
-  priority?: 'default' | 'normal' | 'high';
+export interface NotificationMessage extends Omit<ExpoPushMessage, 'to'> {
 }
 
 export interface CreateNotification {
@@ -342,18 +337,27 @@ export interface CreateNotification {
   message: NotificationMessage;
 }
 
-export enum NotificationStatus {
-  CREATED = 'created',
-  VALIDATED = 'validated',
-}
-
 export interface Notification extends CreateNotification {
   id: string;
-  status: NotificationStatus;
-  tikets: ExpoPushTicket[];
-  receipts?: {
-    [id: string]: ExpoPushReceipt;
-  };
+  created_at: Date;
+  updated_at: Date;
+}
+
+export enum MessageReceiptStatus {
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  FAILED = 'failed',
+}
+
+export interface CreateMessageReceipt {
+  notification: string;
+  expo_ticket: ExpoPushTicket;
+}
+
+export interface MessageReceipt extends CreateMessageReceipt {
+  id: string;
+  status: MessageReceiptStatus;
+  expo_receipt?: ExpoPushReceipt;
   created_at: Date;
   updated_at: Date;
 }

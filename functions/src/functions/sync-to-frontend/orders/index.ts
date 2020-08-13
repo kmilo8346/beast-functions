@@ -58,33 +58,33 @@ const syncOrderChanges = async (message: any) => {
   }
 };
 
-const orderCreated = functions.pubsub
+const onCreated = functions.pubsub
   .topic("order.created")
   .onPublish(async (message) => {
     await syncOrderChanges(message);
   });
 
-const orderConfirmed = functions.pubsub
+const onConfirmed = functions.pubsub
   .topic("order.confirmed")
   .onPublish(async (message) => {
     await syncOrderChanges(message);
   });
 
-const orderDelivered = functions.pubsub
+const onDelivered = functions.pubsub
   .topic("order.delivered")
   .onPublish(async (message) => {
     await syncOrderChanges(message);
   });
 
-const orderCancelled = functions.pubsub
+const onCancelled = functions.pubsub
   .topic("order.cancelled")
   .onPublish(async (message) => {
     await syncOrderChanges(message);
   });
 
 export default {
-  orderCreated,
-  orderConfirmed,
-  orderDelivered,
-  orderCancelled,
+  onCreated,
+  onConfirmed,
+  onDelivered,
+  onCancelled,
 };
