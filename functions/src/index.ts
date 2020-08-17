@@ -5,7 +5,7 @@ import cors from "cors";
 
 import paymentProviders from './functions/payment-providers';
 import dispatchProviders from './functions/dispatch-providers';
-import syncToBackend from './functions/sync-to-backend';
+// import syncToBackend from './functions/sync-to-backend';
 import syncToFrontend from './functions/sync-to-frontend';
 import notifications from './functions/notifications';
 
@@ -25,7 +25,7 @@ exports.beast = functions.https.onRequest(app);
 
 exports.dispatchProviders = dispatchProviders.listeners;
 
-exports.syncToBackend = syncToBackend.listeners;
+// exports.syncToBackend = syncToBackend.listeners;
 
 exports.syncToFrontend = syncToFrontend.listeners;
 
