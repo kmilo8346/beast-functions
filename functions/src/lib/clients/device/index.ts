@@ -35,7 +35,7 @@ class DeviceClient {
       }
 
       const response = await elastic.search({
-        index: "devices-*",
+        index: "devices*",
         body: {
           query: {
             bool: {
@@ -74,7 +74,7 @@ class DeviceClient {
   async deleteByToken(token: string): Promise<void> {
     try {
       const response = await elastic.deleteByQuery({
-        index: "devices-*",
+        index: "devices*",
         body: {
           query: {
             bool: {
