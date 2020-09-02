@@ -17,21 +17,7 @@ const onCreated = functions.pubsub
         },
         message: {
             title: '¡Nueva venta!',
-            body: 'No hagas esperar al cliente ◑.◑',
-            data: {
-              navigate: {
-                name: 'MainTab',
-                params: {
-                  screen: "SellerStack",
-                  params: {
-                    screen: 'MySales',
-                    params: {
-                      view: 'IN_PROGRESS'
-                    }
-                  }
-                }
-              }
-            }
+            body: 'No hagas esperar al cliente ◑.◑'
         }
     }, source: ['id']})
     functions.logger.info(`${prefix} Order created notification, was sended, notification id: ${response.id}`)
@@ -49,19 +35,7 @@ const onConfirmed = functions.pubsub
         },
         message: {
             title: '!Pedido en camino¡',
-            body: 'Ya queda poquito (⌐■_■)',
-            data: {
-              navigate: {
-                name: 'MainTab',
-                params: {
-                  screen: "MenuStack",
-                  params: {
-                    screen: 'Purchases'
-                    // TODO: add view
-                  }
-                }
-              }
-            }
+            body: 'Ya queda poquito (⌐■_■)'
         }
     }, source: ['id']})
     functions.logger.info(`${prefix} Order confirmed notification, was sended, notification id: ${response.id}`)
@@ -79,19 +53,7 @@ const onDelivered = functions.pubsub
         },
         message: {
             title: '!Pedido entregado¡',
-            body: 'Gracias por comprar con Shop Shop ♥‿♥',
-            data: {
-              navigate: {
-                name: 'MainTab',
-                params: {
-                  screen: "MenuStack",
-                  params: {
-                    screen: 'Purchases'
-                    // TODO: add view
-                  }
-                }
-              }
-            }
+            body: 'Gracias por comprar con Shop Shop ♥‿♥'
         }
     }, source: ['id']})
     functions.logger.info(`${prefix} Order delivered notification, was sended, notification id: ${response.id}`)
