@@ -105,7 +105,7 @@ class OrderClient {
       const newOrder = {
         ...params.body,
         status: OrderStatus.CREATED,
-        provider: {
+        dispatch_provider: {
           id: DispatchProvider.OWNER,
           status: OwnerDispatchStatus.CREATED,
         },

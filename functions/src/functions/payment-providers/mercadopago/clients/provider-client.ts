@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
-import { PubSub } from '@google-cloud/pubsub';
+import { PubSub } from "@google-cloud/pubsub";
 
-import config from '../../../../lib/config';
+import config from "../../../../lib/config";
 import mercadopago from "../../../../lib/mercadopago";
 import paymentClient from "../../../../lib/clients/payment";
 import { Payment } from "../../../../types";
@@ -40,32 +40,44 @@ class ProviderClient {
         provider: {
           ...payment.provider,
           status: mpPayment.status,
-          data: { payment_id: mpPayment.id },
+          data: {
+            id: mpPayment.id,
+            status: mpPayment.status,
+            status_detail: mpPayment.status_detail,
+          },
         },
       };
       // update beast payment status for mapped status
-      if (mpPayment.status === 'approved' || mpPayment.status === 'rejected' || mpPayment.status === 'cancelled') {
+      if (
+        mpPayment.status === "approved" ||
+        mpPayment.status === "rejected" ||
+        mpPayment.status === "cancelled"
+      ) {
         update.status = mpPayment.status;
       }
-      await paymentClient.update(payment.id, {body: update});
-      functions.logger.info(`${prefix} Payment was updated, payment id: ${payment.id}`);
+      await paymentClient.update(payment.id, { body: update });
+      functions.logger.info(
+        `${prefix} Payment was updated, payment id: ${payment.id}`
+      );
 
       // emit payment approved if that's the case
-      if (mpPayment.status === 'approved') {
-          const updatedPayment = {
-              ...payment,
-              ...update
-          }
+      if (mpPayment.status === "approved") {
+        const updatedPayment = {
+          ...payment,
+          ...update,
+        };
         const event = `payment.approved`;
-        const topic = `${config.get('google_pub_sub.topic_prefix')}/${event}`
+        const topic = `${config.get("google_pub_sub.topic_prefix")}/${event}`;
         const messageId = await pubSubClient
-            .topic(topic)
-            .publish(Buffer.from(JSON.stringify(updatedPayment)), {
-                id: updatedPayment.id,
-                time: new Date().toISOString(),
-                source: 'beast-functions',
-            });
-        functions.logger.info(`${prefix} Event ${event} was emitted correctly, message id: ${messageId}`);
+          .topic(topic)
+          .publish(Buffer.from(JSON.stringify(updatedPayment)), {
+            id: updatedPayment.id,
+            time: new Date().toISOString(),
+            source: "beast-functions",
+          });
+        functions.logger.info(
+          `${prefix} Event ${event} was emitted correctly, message id: ${messageId}`
+        );
       }
     } catch (error) {
       functions.logger.debug({ payload });

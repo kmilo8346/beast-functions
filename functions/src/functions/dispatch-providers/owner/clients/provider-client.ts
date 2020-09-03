@@ -2,8 +2,9 @@ import * as functions from "firebase-functions";
 import { PubSub } from "@google-cloud/pubsub";
 
 import config from "../../../../lib/config";
+import mercadopago from '../../../../lib/mercadopago'
 import orderClient from "../../../../lib/clients/order";
-import { Payment, DispatchProvider } from "../../../../types";
+import { Payment,  Order, ProductConfirmationType,  } from "../../../../types";
 
 const prefix = "[owner dispatch provider client]";
 const pubSubClient = new PubSub();
@@ -15,16 +16,6 @@ class ProviderClient {
    */
   async createOrder(payment: Payment): Promise<void> {
     try {
-      // precondition
-      if (
-        payment.transaction.store.dispatch_provider !== DispatchProvider.OWNER
-      ) {
-        functions.logger.info(
-          `${prefix} The dispatch provider must be owner, skipping logic`
-        );
-        return;
-      }
-
       // skip if order is already created
       const searchResponse = await orderClient.search({
         filters: { reference: payment.reference },
@@ -45,6 +36,7 @@ class ProviderClient {
           reference: payment.reference,
           customer: payment.customer,
           transaction: payment.transaction,
+          payment_provider: payment.provider
         },
       });
 
@@ -66,6 +58,55 @@ class ProviderClient {
       functions.logger.error(error);
 
       throw new Error(`${prefix} Unexpected error creating order`);
+    }
+  }
+
+  async refundPartial(order: Order): Promise<void> {
+    try {
+      const desiredAmount = order.transaction.shopping_cart.reduce((amount, item) => amount + (item.qty*item.price), 0);
+      const posibleAmount = (order.dispatch_provider.confirmation?.product_confirmations || []).reduce((amount, pc) => {
+        if (pc.type === ProductConfirmationType.UPDATE) {
+          const item = order.transaction.shopping_cart.find(item => item.id === pc.id);
+          if (item) {
+            return amount + (pc.qty_posible*item.price)
+          }
+        }
+        return amount;
+      }, 0);
+      mercadopago.configure({
+        access_token: order.transaction.store.seller_credentials.access_token,
+      });
+      await mercadopago.payment.refundPartial({
+        payment_id: order.payment_provider.data.id,
+        amount: desiredAmount - posibleAmount
+      })
+    } catch (error) {
+      functions.logger.debug({ order });
+      functions.logger.error(error);
+
+      throw new Error(`${prefix} Unexpected error executing a partial refund`);
+    } finally {
+      mercadopago.configure({
+        access_token: config.get('mercado_pago.access_token'),
+      });
+    }
+  }
+
+  async refund(order: Order): Promise<void> {
+    try {
+      mercadopago.configure({
+        access_token: order.transaction.store.seller_credentials.access_token,
+      });
+      await mercadopago.payment.refund(order.payment_provider.data.id)
+    } catch (error) {
+      functions.logger.debug({ order });
+      functions.logger.error(error);
+
+      throw new Error(`${prefix} Unexpected error executing a refund`);
+    } finally {
+      mercadopago.configure({
+        access_token: config.get('mercado_pago.access_token'),
+      });
     }
   }
 }

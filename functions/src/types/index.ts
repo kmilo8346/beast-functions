@@ -250,7 +250,15 @@ export type ProductConfirmation =
   | { type: ProductConfirmationType.UPDATE; id: string; qty_posible: number }
   | { type: ProductConfirmationType.DELETE; id: string };
 
-export type Confirmation = ProductConfirmation[];
+  export enum ConfirmationStatus {
+    FULL_STOCK = 'full_stock',
+    PARTIAL_STOCK = 'partial_stock',
+    OUT_OF_STOCK = 'out_of_stock',
+  }
+  export interface Confirmation {
+    status: ConfirmationStatus;
+    product_confirmations: ProductConfirmation[];
+  }
 
 export enum OwnerDispatchStatus {
   CREATED = 'created',
@@ -259,23 +267,34 @@ export enum OwnerDispatchStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum CancellationReason {
+  CONFIRMATION_OUT_OF_STOCK = 'confirmation_out_of_stock',
+  CONFIRMATION_TIMEOUT = 'confirmation_timeout',
+}
+
+export interface Cancellation {
+  reason: CancellationReason;
+}
+
 export interface DispatchProviderState {
   id: DispatchProvider.OWNER;
   status: OwnerDispatchStatus;
   confirmation?: Confirmation;
+  cancellation?: Cancellation;
 }
 
 export interface CreateOrder {
   reference: string;
   customer: Customer;
   transaction: Transaction;
+  payment_provider: PaymentProviderState;
   idempotency?: string;
 }
 
 export interface Order extends CreateOrder {
   id: string;
   status: OrderStatus;
-  provider: DispatchProviderState;
+  dispatch_provider: DispatchProviderState;
   created_at: Date;
   updated_at: Date;
 }
