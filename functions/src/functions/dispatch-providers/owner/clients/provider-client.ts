@@ -66,7 +66,7 @@ class ProviderClient {
       const desiredAmount = order.transaction.shopping_cart.reduce((amount, item) => amount + (item.qty*item.price), 0);
       const posibleAmount = (order.dispatch_provider.confirmation?.product_confirmations || []).reduce((amount, pc) => {
         if (pc.type === ProductConfirmationType.UPDATE) {
-          const item = order.transaction.shopping_cart.find(item => item.id === pc.id);
+          const item = order.transaction.shopping_cart.find(i => i.id === pc.id);
           if (item) {
             return amount + (pc.qty_posible*item.price)
           }
