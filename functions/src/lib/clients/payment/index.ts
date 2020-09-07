@@ -36,7 +36,7 @@ class PaymentClient {
       }
 
       const response = await elastic.search({
-        index: "payments-*",
+        index: "payments*",
         body: {
           query: {
             bool: {

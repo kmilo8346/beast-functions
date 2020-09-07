@@ -49,7 +49,7 @@ class NotificationClient {
       }
 
       const response = await elastic.search({
-        index: 'notifications-*',
+        index: 'notifications*',
         body: {
           query: {
             bool: {
@@ -132,7 +132,7 @@ class NotificationClient {
       }
       
       // save notification object
-      const index = `notifications-${utils.formatDate(new Date())}`;
+      const index = `notifications`;
       await utils.createIndexIfNotExist(index, {
         mappings: {
           properties: {

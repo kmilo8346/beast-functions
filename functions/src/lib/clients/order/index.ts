@@ -55,7 +55,7 @@ class OrderClient {
       }
 
       const response = await elastic.search({
-        index: "orders-*",
+        index: "orders*",
         body: {
           query: {
             bool: {
@@ -92,7 +92,7 @@ class OrderClient {
    */
   async create(params: CreateParams<CreateOrder>): Promise<any> {
     try {
-      const index = `orders-${utils.formatDate(new Date())}`;
+      const index = `orders`;
       // creating index if not exist
       await utils.createIndexIfNotExist(index, {
         mappings: {

@@ -24,7 +24,7 @@ class MessageReceiptClient {
     params: CreateParams<CreateMessageReceipt>
   ): Promise<MessageReceipt> {
     try {
-      const index = `message-receipts-${utils.formatDate(new Date())}`;
+      const index = `message-receipts`;
       await utils.createIndexIfNotExist(index, {
         mappings: {
           properties: {
