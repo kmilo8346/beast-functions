@@ -20,7 +20,7 @@ const onCreated = functions.pubsub
         },
         message: {
           title: "¡Nueva venta!",
-          body: "No hagas esperar al cliente ◑.◑",
+          body: "Tu cliente te espera 😅",
         },
       },
       source: ["id"],
@@ -39,15 +39,15 @@ const onConfirmed = functions.pubsub
       `${prefix} Sending order confirmed notification to the client, order id: ${order.id}, user id: ${order.customer.id}`
     );
     let notificationMessage = {
-      title: "!Pedido en camino¡",
-      body: "Ya queda poquito (⌐■_■)",
+      title: "¡Pedido en camino!",
+      body: "Ya queda poquito 🤩",
     };
     if (
       order.dispatch_provider.confirmation?.status === ConfirmationStatus.PARTIAL_STOCK
     ) {
       notificationMessage = {
-        title: "!Pedido en camino¡",
-        body: "Faltaron algunas cositas, te devolveremos el $ de lo q falta",
+        title: "¡Pedido en camino!",
+        body: "Faltaron algunas cositas, te devolveremos el dinero de lo que falta",
       };
     }
     const response = await notificationClient.create({
@@ -78,8 +78,8 @@ const onDelivered = functions.pubsub
           user: order.customer.id,
         },
         message: {
-          title: "!Pedido entregado¡",
-          body: "Gracias por comprar con Shop Shop ♥‿♥",
+          title: "¡Pedido entregado!",
+          body: "Gracias por comprar con Shop Shop 🤗",
         },
       },
       source: ["id"],
