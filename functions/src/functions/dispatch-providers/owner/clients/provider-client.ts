@@ -4,7 +4,7 @@ import { PubSub } from "@google-cloud/pubsub";
 import config from "../../../../lib/config";
 import mercadopago from '../../../../lib/mercadopago'
 import orderClient from "../../../../lib/clients/order";
-import { Payment,  Order, ProductConfirmationType,  } from "../../../../types";
+import { Payment,  Order, ProductConfirmationType, OrderStatus, DispatchProvider, OwnerDispatchStatus  } from "../../../../types";
 
 const prefix = "[owner dispatch provider client]";
 const pubSubClient = new PubSub();
@@ -16,6 +16,12 @@ class ProviderClient {
    */
   async createOrder(payment: Payment): Promise<void> {
     try {
+      if (
+        payment.dispatch_provider_id !== DispatchProvider.OWNER
+      ) {
+        return;
+      }
+
       // skip if order is already created
       const searchResponse = await orderClient.search({
         filters: { reference: payment.reference },
@@ -33,10 +39,17 @@ class ProviderClient {
       // create new order
       const order = await orderClient.create({
         body: {
+          status: OrderStatus.CREATED,
           reference: payment.reference,
           customer: payment.customer,
           transaction: payment.transaction,
-          payment_provider: payment.provider
+          payment_provider_id: payment.payment_provider_id,
+          dispatch_provider_id: payment.dispatch_provider_id,
+          payment_provider: payment.provider,
+          dispatch_provider: {
+            id: DispatchProvider.OWNER,
+            status: OwnerDispatchStatus.CREATED,
+          },
         },
       });
 
@@ -63,6 +76,10 @@ class ProviderClient {
 
   async refundPartial(order: Order): Promise<void> {
     try {
+      // precondition
+      if (order.dispatch_provider_id !== DispatchProvider.OWNER) {
+        return;
+      }
       const desiredAmount = order.transaction.shopping_cart.reduce((amount, item) => amount + (item.qty*item.price), 0);
       const posibleAmount = (order.dispatch_provider.confirmation?.product_confirmations || []).reduce((amount, pc) => {
         if (pc.type === ProductConfirmationType.UPDATE) {

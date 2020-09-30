@@ -1,4 +1,8 @@
-import { ExpoPushTicket, ExpoPushReceipt, ExpoPushMessage } from 'expo-server-sdk';
+import {
+  ExpoPushTicket,
+  ExpoPushReceipt,
+  ExpoPushMessage,
+} from 'expo-server-sdk';
 
 export interface CreateParams<T> {
   body: T;
@@ -17,7 +21,6 @@ export interface ActionParams<T> {
 }
 
 export interface GetParams {
-  id: string;
   source?: string[];
 }
 
@@ -27,20 +30,21 @@ export interface GetAllParams {
   source?: string[];
 }
 
-export type SortParam = { field: string; order: 'asc' | 'desc' }[];
-
 export interface SearchParams {
   query?: string;
   filters?: { [key: string]: any };
   from: number;
   size: number;
-  sort?: SortParam;
+  sort?: { [key: string]: 'asc' | 'desc' };
   source?: string[];
 }
 
 export interface SearchResponse<T> {
+  query?: string;
+  filters?: { [key: string]: any };
   from: number;
   size: number;
+  sort?: { [key: string]: 'asc' | 'desc' };
   total: number;
   hits: T[];
 }
@@ -79,6 +83,16 @@ export type OpeningHours = {
   close: number;
 }[];
 
+export interface AddressProp {
+  short_name: string;
+  long_name: string;
+}
+
+export interface Location {
+  lat: number;
+  lng: number;
+}
+
 export interface Place {
   id: string;
   url: string;
@@ -90,27 +104,42 @@ export interface Place {
   administrative_area_level_1: AddressProp;
   apartment: string;
   geometry: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-    viewport: {
-      northeast: {
-        lat: number;
-        lng: number;
-      };
-      southwest: {
-        lat: number;
-        lng: number;
-      };
-    };
+    location: Location;
   };
 }
 
-export interface AddressProp {
-  short_name: string;
-  long_name: string;
+export interface CreateAnonymouslyUser {
+  id: string;
+  current_address: string;
+  addresses: Place[];
 }
+
+export interface CreateLoggedUser {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name?: string;
+  photo_url: string;
+  phone: string;
+  phone_verified: boolean;
+  current_address: string;
+  addresses: Place[];
+}
+
+export type CreateUser = CreateAnonymouslyUser | CreateLoggedUser;
+
+export interface AnonymouslyUser extends CreateAnonymouslyUser {
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface LoggedUser extends CreateLoggedUser {
+  current_store?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export type User = AnonymouslyUser | LoggedUser;
 
 export enum PaymentProvider {
   MERCADOPAGO = 'mercadopago',
@@ -118,15 +147,15 @@ export enum PaymentProvider {
 
 export enum DispatchProvider {
   OWNER = 'owner',
+  OWNER_RRSS = 'owner_rrss',
 }
 
-export interface Store {
-  id: string;
+export interface CreateStore {
   user: string;
-  version: number;
   name: string;
   phone: string;
   images: string[];
+  reference: string;
   delivery_time: IntegerRange;
   delivery_area: DeliveryArea;
   opening_hours: OpeningHours;
@@ -135,65 +164,68 @@ export interface Store {
   dispatch_provider: DispatchProvider;
 }
 
-export interface Product {
+export interface Store extends CreateStore {
   id: string;
-  type: 'product';
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateProduct {
   name: string;
-  description: string;
-  images: string[];
   price: number;
-  brand?: string;
   tags?: string[];
-  enabled: boolean;
-  store: Store;
-}
-
-export interface Service {
-  id: string;
-  type: 'service';
-  name: string;
-  description: string;
   images: string[];
-  price: number | null;
-  tags?: string[];
   enabled: boolean;
-  store: Store;
+  reference: string;
+  description: string;
 }
 
-export interface Customer {
+export interface Product extends CreateProduct {
   id: string;
-  email: string;
-  first_name: string;
-  last_name?: string;
-  photo_url?: string;
-  phone: string;
+  store: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export interface Item extends Omit<Product, 'store'> {
+export interface Item extends Product {
   qty: number;
 }
 
-export interface Transaction {
-  country: string;
-  currency: string;
-  language: string;
-  delivery_address: Place;
-  shopping_cart: Item[];
-  store: Store;
-}
+export type CreatePayment =
+  | {
+      payment_provider_id: PaymentProvider.MERCADOPAGO;
+      dispatch_provider_id: DispatchProvider.OWNER;
+      customer: {
+        id: string;
+        email: string;
+        first_name: string;
+        last_name?: string;
+        photo_url?: string;
+        phone: string;
+      };
+      transaction: {
+        country: string;
+        currency: string;
+        language: string;
+        delivery_address: Place;
+        shopping_cart: Item[];
+        store: Store;
+      };
+      redirect_url: string;
+    }
+  | {
+      payment_provider_id: PaymentProvider.MERCADOPAGO;
+      dispatch_provider_id: DispatchProvider.OWNER_RRSS;
+      transaction: {
+        country: string;
+        currency: string;
+        language: string;
+        shopping_cart: Item[];
+        store: Store;
+      };
+    };
 
-export interface CreatePayment {
-  customer: Customer;
-  transaction: Transaction;
-  redirect_url: string;
-}
-
-export interface CreateCheckout {
-  reference: string;
-  customer: Customer;
-  transaction: Transaction;
-  redirect_url: string;
-}
+export type CreateCheckout = CreatePayment & { reference: string };
 
 export enum MercadopagoPaymentStatus {
   STARTED = 'started',
@@ -208,7 +240,7 @@ export enum MercadopagoPaymentStatus {
   CHARGED_BACK = 'charged_back',
 }
 
-export type PaymentProviderState = {
+export type MercadopagoPaymentProviderState = {
   id: PaymentProvider.MERCADOPAGO;
   status: MercadopagoPaymentStatus;
   checkout: { id: string; init_point: string };
@@ -222,17 +254,25 @@ export enum PaymentStatus {
   CANCELLED = 'cancelled',
 }
 
-export interface Payment extends CreatePayment {
+export type Payment = CreatePayment & {
   id: string;
   reference: string;
   status: PaymentStatus;
-  provider: PaymentProviderState;
+  // TODO: change to dispatch provider state
+  provider: MercadopagoPaymentProviderState;
   idempotency?: string;
   created_at: Date;
   updated_at: Date;
-}
+};
 
 export enum OrderStatus {
+  CREATED = 'created',
+  CONFIRMED = 'confirmed',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled',
+}
+
+export enum OwnerDispatchStatus {
   CREATED = 'created',
   CONFIRMED = 'confirmed',
   DELIVERED = 'delivered',
@@ -250,21 +290,15 @@ export type ProductConfirmation =
   | { type: ProductConfirmationType.UPDATE; id: string; qty_posible: number }
   | { type: ProductConfirmationType.DELETE; id: string };
 
-  export enum ConfirmationStatus {
-    FULL_STOCK = 'full_stock',
-    PARTIAL_STOCK = 'partial_stock',
-    OUT_OF_STOCK = 'out_of_stock',
-  }
-  export interface Confirmation {
-    status: ConfirmationStatus;
-    product_confirmations: ProductConfirmation[];
-  }
+export enum ConfirmationStatus {
+  FULL_STOCK = 'full_stock',
+  PARTIAL_STOCK = 'partial_stock',
+  OUT_OF_STOCK = 'out_of_stock',
+}
 
-export enum OwnerDispatchStatus {
-  CREATED = 'created',
-  CONFIRMED = 'confirmed',
-  DELIVERED = 'delivered',
-  CANCELLED = 'cancelled',
+export interface Confirmation {
+  status: ConfirmationStatus;
+  product_confirmations: ProductConfirmation[];
 }
 
 export enum CancellationReason {
@@ -276,28 +310,68 @@ export interface Cancellation {
   reason: CancellationReason;
 }
 
-export interface DispatchProviderState {
+export type OwnerDispatchProviderState = {
   id: DispatchProvider.OWNER;
   status: OwnerDispatchStatus;
   confirmation?: Confirmation;
   cancellation?: Cancellation;
+};
+
+export enum OwnerRRSSDispatchStatus {
+  DELIVERED = 'delivered',
 }
 
-export interface CreateOrder {
-  reference: string;
-  customer: Customer;
-  transaction: Transaction;
-  payment_provider: PaymentProviderState;
-  idempotency?: string;
-}
+export type OwnerRRSSDispatchProviderState = {
+  id: DispatchProvider.OWNER_RRSS;
+  status: OwnerRRSSDispatchStatus;
+};
 
-export interface Order extends CreateOrder {
+export type CreateOrder =
+  | {
+      status: OrderStatus;
+      reference: string;
+      customer: {
+        id: string;
+        email: string;
+        first_name: string;
+        last_name?: string;
+        photo_url?: string;
+        phone: string;
+      };
+      transaction: {
+        country: string;
+        currency: string;
+        language: string;
+        delivery_address: Place;
+        shopping_cart: Item[];
+        store: Store;
+      };
+      payment_provider_id: PaymentProvider.MERCADOPAGO;
+      dispatch_provider_id: DispatchProvider.OWNER;
+      payment_provider: MercadopagoPaymentProviderState;
+      dispatch_provider: OwnerDispatchProviderState;
+    }
+  | {
+      status: OrderStatus;
+      reference: string;
+      transaction: {
+        country: string;
+        currency: string;
+        language: string;
+        shopping_cart: Item[];
+        store: Store;
+      };
+      payment_provider_id: PaymentProvider.MERCADOPAGO;
+      dispatch_provider_id: DispatchProvider.OWNER_RRSS;
+      payment_provider: MercadopagoPaymentProviderState;
+      dispatch_provider: OwnerRRSSDispatchProviderState;
+    };
+
+export type Order = CreateOrder & {
   id: string;
-  status: OrderStatus;
-  dispatch_provider: DispatchProviderState;
   created_at: Date;
   updated_at: Date;
-}
+};
 
 export interface CreateDevice {
   token: string;
@@ -314,8 +388,7 @@ export interface NotificationFilters {
   user: string;
 }
 
-export interface NotificationMessage extends Omit<ExpoPushMessage, 'to'> {
-}
+export interface NotificationMessage extends Omit<ExpoPushMessage, 'to'> {}
 
 export interface CreateNotification {
   filters: NotificationFilters;
@@ -345,4 +418,70 @@ export interface MessageReceipt extends CreateMessageReceipt {
   expo_receipt?: ExpoPushReceipt;
   created_at: Date;
   updated_at: Date;
+}
+
+export enum WidgetType {
+  BANNER = 'banner',
+  NEARBY_STORES = 'nearby_stores',
+}
+
+export interface BannerInstructions {
+  image: string;
+}
+
+export interface NearbyStoresInstructions {
+  title: string;
+  from: number;
+  size: number;
+}
+
+export interface CreateWidget {
+  type: WidgetType;
+  tags: string[];
+  sort: number;
+  instructions: BannerInstructions | NearbyStoresInstructions;
+}
+
+export interface Widget extends CreateWidget {
+  id: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface BannerContent {
+  image: string;
+}
+
+export interface NearbyStoresContent {
+  title: string;
+  initial: SearchResponse<Store>;
+}
+
+export interface ComputedWidget {
+  id: string;
+  type: WidgetType;
+  content: BannerContent | NearbyStoresContent;
+}
+
+export interface ComputeContext {
+  location: Location;
+}
+
+export interface ComputeFilters {
+  tag: string;
+}
+
+export interface ComputeParams {
+  filters: ComputeFilters;
+  context: ComputeContext;
+  from: number;
+  size: number;
+}
+
+export interface ComputeResponse {
+  filters: ComputeFilters;
+  from: number;
+  size: number;
+  total: number;
+  hits: ComputedWidget[];
 }

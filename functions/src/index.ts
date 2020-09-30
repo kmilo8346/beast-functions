@@ -5,7 +5,6 @@ import cors from "cors";
 
 import paymentProviders from './functions/payment-providers';
 import dispatchProviders from './functions/dispatch-providers';
-import notifications from './functions/notifications';
 
 const prefix = '[beast functions]';
 admin.initializeApp();
@@ -22,7 +21,5 @@ app.use('/payment-providers', paymentProviders.router)
 exports.beast = functions.https.onRequest(app);
 
 exports.dispatchProviders = dispatchProviders.listeners;
-
-exports.notifications = notifications.listeners;
 
 

@@ -8,9 +8,6 @@ import {
   SearchParams,
   SearchResponse,
   Order,
-  OrderStatus,
-  DispatchProvider,
-  OwnerDispatchStatus,
 } from "../../../types";
 
 const prefix = "[order client]";
@@ -51,7 +48,9 @@ class OrderClient {
         { updated_at: { order: "desc" } },
       ];
       if (params.sort) {
-        sort = params.sort.map((s) => ({ [s.field]: { order: s.order } }));
+        sort = Object.keys(params.sort).map((field) => ({
+          [field]: { order: (params.sort as any)[field] },
+        }));
       }
 
       const response = await elastic.search({
@@ -104,11 +103,7 @@ class OrderClient {
       });
       const newOrder = {
         ...params.body,
-        status: OrderStatus.CREATED,
-        dispatch_provider: {
-          id: DispatchProvider.OWNER,
-          status: OwnerDispatchStatus.CREATED,
-        },
+        
         created_at: new Date(),
         updated_at: new Date(),
       };
