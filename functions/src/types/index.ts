@@ -110,8 +110,10 @@ export interface Place {
 
 export interface CreateAnonymouslyUser {
   id: string;
-  current_address: string;
-  addresses: Place[];
+  current_address?: string;
+  addresses?: Place[];
+  phone?: string;
+  phone_verified?: boolean;
 }
 
 export interface CreateLoggedUser {
@@ -120,10 +122,10 @@ export interface CreateLoggedUser {
   first_name: string;
   last_name?: string;
   photo_url: string;
-  phone: string;
-  phone_verified: boolean;
-  current_address: string;
-  addresses: Place[];
+  phone?: string;
+  phone_verified?: boolean;
+  current_address?: string;
+  addresses?: Place[];
 }
 
 export type CreateUser = CreateAnonymouslyUser | CreateLoggedUser;
