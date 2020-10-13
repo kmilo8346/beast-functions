@@ -180,11 +180,15 @@ export interface CreateProduct {
   enabled: boolean;
   reference: string;
   description: string;
+  store_info: {
+    id: string;
+    delivery_area: Circle;
+    opening_hours: OpeningHours;
+  };
 }
 
 export interface Product extends CreateProduct {
   id: string;
-  store: string;
   created_at: Date;
   updated_at: Date;
 }
