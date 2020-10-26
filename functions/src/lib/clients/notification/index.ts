@@ -1,4 +1,4 @@
-import { Expo, ExpoPushTicket } from 'expo-server-sdk';
+import { Expo } from 'expo-server-sdk';
 import * as functions from "firebase-functions";
 
 import elastic from '../../elastic';
@@ -9,11 +9,9 @@ import {
   Device,
   SearchParams,
   SearchResponse,
-  MessageReceipt,
 } from '../../../types';
 import utils from '../../utils';
 import deviceClient from '../device';
-import messageReceiptClient from '../message-receipt';
 
 const prefix = '[notification client]';
 const expo = new Expo();
@@ -91,9 +89,9 @@ class NotificationClient {
   ): Promise<Notification> {
     try {
       // return notification if already created
-      if (params.idempotency) {
+      if (params.body.idempotency) {
         const searchNotificationsResponse = await this.search({
-          filters: { idempotency: params.idempotency },
+          filters: { idempotency: params.body.idempotency },
           from: 0,
           size: 1,
         });
@@ -124,13 +122,12 @@ class NotificationClient {
         hash[device.token] = true;
       });
       const tokens = Object.keys(hash);
-      let tickets: ExpoPushTicket[] = [];
       if (tokens.length) {
         const message = {
           to: tokens,
           ...params.body.message,
         };
-        tickets = await expo.sendPushNotificationsAsync([message]);
+        await expo.sendPushNotificationsAsync([message]);
       }
       
       // save notification object
@@ -153,23 +150,11 @@ class NotificationClient {
         refresh: 'true',
         body: newNotification,
       });
-      const created: Notification =  {
-        ...newNotification,
-        id: `${response.body._index}|${response.body._id}`,
-      }
-
-      // create message receipt for every ticket
-      const promises: Promise<MessageReceipt>[] = [];
-      tickets.forEach(ticket => {
-        promises.push(messageReceiptClient.create({body: {
-          notification: created.id,
-          expo_ticket: ticket
-        }}))
-      })
-      await Promise.all(promises);
-
       return utils.mapObject(
-        created,
+        {
+          ...newNotification,
+          id: `${response.body._index}|${response.body._id}`,
+        },
         params.source,
       );
     } catch (error) {
