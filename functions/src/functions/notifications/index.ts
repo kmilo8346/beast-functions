@@ -46,7 +46,7 @@ const onOrderCreatedSendPushNotification = functions.pubsub
     functions.logger.info(
       `${prefix} Sending order created event to seller, order id: ${order.id}, seller id: ${order.transaction.shopping_cart.store.user}`
     );
-    pusher.trigger(`seller_${order.transaction.shopping_cart.store.user}`, 'order.created', order);
+    await pusher.trigger(`seller_${order.transaction.shopping_cart.store.user}`, 'order.created', order);
     functions.logger.info(
       `${prefix} Order created event was sended`
     );
