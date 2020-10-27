@@ -1,17 +1,21 @@
 import * as functions from "firebase-functions";
 
-import config from '../../lib/config'
+// types
 import { Order } from "../../types";
+// lib
+import config from '../../lib/config';
+import pusher from '../../lib/pusher';
 import notificationClient from "../../lib/clients/notification";
 
 const prefix = "[notifications]";
 
-const onOrderCreatedSendPush = functions.pubsub
+
+const onOrderCreatedSendPushNotification = functions.pubsub
   .topic("order.created")
   .onPublish(async (message) => {
     const order: Order = message.json;
     functions.logger.info(
-      `${prefix} Sending order created notification to the seller, order id: ${order.id}, seller id: ${order.transaction.shopping_cart.store.user}`
+      `${prefix} Sending order created notification to seller, order id: ${order.id}, seller id: ${order.transaction.shopping_cart.store.user}`
     );
     const idempotency = config.get('environment') === 'development' ? `${new Date().getTime()}`: message.attributes.id;
     const response = await notificationClient.create({
@@ -35,6 +39,20 @@ const onOrderCreatedSendPush = functions.pubsub
     );
   });
 
+  const onOrderCreatedSendEvent = functions.pubsub
+  .topic("order.created")
+  .onPublish(async (message) => {
+    const order: Order = message.json;
+    functions.logger.info(
+      `${prefix} Sending order created event to seller, order id: ${order.id}, seller id: ${order.transaction.shopping_cart.store.user}`
+    );
+    pusher.trigger(`seller_${order.transaction.shopping_cart.store.user}`, 'order.created', order);
+    functions.logger.info(
+      `${prefix} Order created event was sended`
+    );
+  }); 
+
 export default {
-  onOrderCreatedSendPush,
+  onOrderCreatedSendPushNotification,
+  onOrderCreatedSendEvent
 };

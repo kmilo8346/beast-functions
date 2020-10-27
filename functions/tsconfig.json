@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": [
-      "esnext.asynciterable"
+      "esnext.asynciterable",
     ],
     "module": "commonjs",
     "noImplicitReturns": true,
@@ -10,7 +10,8 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
   },
   "compileOnSave": true,
   "include": [
