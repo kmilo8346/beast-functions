@@ -13,40 +13,43 @@ const onStoreUpdatedUpdateProducts = functions.pubsub
       functions.logger.info(
         `${prefix} Store ${message.attributes.id} was updated, updating related products`
       );
-      const response = await elastic.updateByQuery({
-        index: "products",
-        refresh: true,
-        body: {
-          script: {
-            lang: "painless",
-            source: 'ctx._source["store_info"] = params.store',
-            params: {
-              store: {
-                id: message.attributes.id,
-                enabled: store.enabled,
-                delivery_area: store.delivery_area.geometry,
-                opening_hours: store.opening_hours,
+      if ('enabled' in store || 'delivery_area' in store || 'opening_hours' in store) {
+        const response = await elastic.updateByQuery({
+          index: "products",
+          refresh: true,
+          body: {
+            script: {
+              lang: "painless",
+              source: 'ctx._source["store_info"] = params.store',
+              params: {
+                store: {
+                  id: message.attributes.id,
+                  enabled: store.enabled,
+                  delivery_area: store.delivery_area.geometry,
+                  opening_hours: store.opening_hours,
+                },
+              },
+            },
+            query: {
+              bool: {
+                must: [
+                  {
+                    match_phrase: {
+                      "store_info.id.keyword": {
+                        query: message.attributes.id,
+                      },
+                    },
+                  },
+                ],
               },
             },
           },
-          query: {
-            bool: {
-              must: [
-                {
-                  match_phrase: {
-                    "store_info.id.keyword": {
-                      query: message.attributes.id,
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        },
-      });
-      functions.logger.info(
-        `${prefix} Products updated ${response.body.updated}`
-      );
+        });
+        functions.logger.info(
+          `${prefix} Products updated ${response.body.updated}`
+        );
+      }
+      
     } catch (error) {
       functions.logger.debug({ store });
       functions.logger.error(error);
