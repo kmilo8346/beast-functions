@@ -13,7 +13,7 @@ const onStoreUpdatedUpdateProducts = functions.pubsub
       functions.logger.info(
         `${prefix} Store ${message.attributes.id} was updated, updating related products`
       );
-      if ('enabled' in store || 'delivery_area' in store || 'opening_hours' in store) {
+      if ('enabled' in store && 'delivery_area' in store && 'opening_hours' in store) {
         const response = await elastic.updateByQuery({
           index: "products",
           refresh: true,
