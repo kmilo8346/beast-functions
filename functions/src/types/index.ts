@@ -1,6 +1,4 @@
-import {
-  ExpoPushMessage,
-} from 'expo-server-sdk';
+import { ExpoPushMessage } from 'expo-server-sdk';
 
 export interface CreateParams<T> {
   body: T;
@@ -9,10 +7,12 @@ export interface CreateParams<T> {
 
 export interface UpdateParams<T> {
   body: Partial<T>;
+  source?: string[];
 }
 
 export interface ActionParams<T> {
-  body: Partial<T>;
+  body?: Partial<T>;
+  source?: string[];
 }
 
 export interface GetParams {
@@ -80,17 +80,18 @@ export interface AddressProp {
 export interface Place {
   id: string;
   url: string;
-  street_number: AddressProp;
-  route: AddressProp;
+  street_number?: AddressProp;
+  route?: AddressProp;
   locality: AddressProp;
   administrative_area_level_3: AddressProp;
   administrative_area_level_2: AddressProp;
   administrative_area_level_1: AddressProp;
-  apartment: string;
+  apartment?: string;
   location: {
     lat: number;
     lon: number;
   };
+  formatted_address?: string;
 }
 
 export interface CreateUser {
@@ -133,6 +134,7 @@ export interface CreateStore {
 
 export interface Store extends CreateStore {
   id: string;
+  slug: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -172,6 +174,7 @@ export interface CreateOrder {
     last_name?: string;
     photo_url?: string;
     phone: string;
+    created_at?: Date;
   };
   transaction: {
     country: string;
@@ -185,8 +188,34 @@ export interface CreateOrder {
   };
 }
 
+export enum OrderStatus {
+  CREATED = 'created',
+  CONFIRMED = 'confirmed',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled',
+}
+
+export enum CancellationExecuter {
+  CLIENT = 'client',
+  SELLER = 'seller',
+  BEAST = 'beast',
+}
+
+export enum CancellationReason {
+  INACTIVITY = 'inactivity',
+}
+
 export interface Order extends CreateOrder {
   id: string;
+  status: OrderStatus;
+  cancellation_information?: {
+    executer: CancellationExecuter;
+    reason?: CancellationReason;
+  };
+  stats: {
+    amount: number;
+    total: number;
+  };
   created_at: Date;
   updated_at: Date;
 }
@@ -218,4 +247,25 @@ export interface Notification extends CreateNotification {
   id: string;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface CreateMercadoPagoCheckout {
+  customer: {
+    email: string;
+    first_name: string;
+    last_name?: string;
+    phone: string;
+  };
+  transaction: {
+    currency: string;
+    delivery_address: {
+      street_number: AddressProp;
+      route: AddressProp;
+    };
+    store: {
+      name: string;
+      payment_provider: PaymentProvider;
+    };
+    amount: number;
+  };
 }
