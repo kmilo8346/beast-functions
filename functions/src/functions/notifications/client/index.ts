@@ -89,7 +89,7 @@ const onOrderDelivered = functions.pubsub
         },
         message: {
           title: "¡Gracias por elegir Shop Shop!",
-          body: "Con tu pedido estás apoyando a un vecino emprendedor 😍",
+          body: `Con tu pedido a ${order.transaction.shopping_cart.store.name} estás apoyando a un vecino emprendedor 😍`,
           data: {
             beast_route: "ClientOrderDetails",
             beast_params: {
@@ -154,7 +154,7 @@ const onOrderCancelled = functions.pubsub
           },
           message: {
             title: "Pedido cancelado",
-            body: `Listo, tu pedido fue cancelado correctamente`,
+            body: `Listo, tu pedido a ${order.transaction.shopping_cart.store.name} fue cancelado correctamente`,
             data: {
               beast_route: "ClientOrderDetails",
               beast_params: {

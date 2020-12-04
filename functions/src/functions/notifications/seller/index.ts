@@ -57,7 +57,7 @@ const onOrderConfirmed = functions.pubsub
         },
         message: {
           title: "¡Orden confirmada!",
-          body: "Hemos notificado al cliente 😜",
+          body: `Hemos notificado a ${order.customer.first_name} 😜`,
           data: {
             beast_require_store: true,
             beast_route: "SellerOrderDetails",
@@ -91,7 +91,7 @@ const onOrderDelivered = functions.pubsub
         },
         message: {
           title: "¡Orden entregada!",
-          body: "Súper, vamos por más 🤩",
+          body: `Hemos notificado a ${order.customer.first_name}, vamos por más 🤩`,
           data: {
             beast_require_store: true,
             beast_route: "SellerOrderDetails",
@@ -128,7 +128,7 @@ const onOrderCancelled = functions.pubsub
           },
           message: {
             title: "Orden cancelada",
-            body: "El cliente cambió de parecer 🥺",
+            body: `${order.customer.first_name} cambió de parecer 🥺`,
             data: {
               beast_require_store: true,
               beast_route: "SellerOrderDetails",
@@ -158,7 +158,7 @@ const onOrderCancelled = functions.pubsub
           },
           message: {
             title: "Orden cancelada",
-            body: "Listo, cancelamos tu orden correctamente",
+            body: `Listo, cancelamos la orden de ${order.customer.first_name} correctamente`,
             data: {
               beast_require_store: true,
               beast_route: "SellerOrderDetails",
