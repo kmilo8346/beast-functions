@@ -3,26 +3,21 @@ import * as functions from "firebase-functions";
 // types
 import { CancellationExecuter, Order } from "../../../types";
 // lib
-import config from "../../../lib/config";
 import notificationClient from "../../../lib/clients/notification";
 
 const prefix = "[client notifications]";
 
 const onOrderCreated = functions.pubsub
   .topic("order.created")
-  .onPublish(async (message) => {
+  .onPublish(async (message, context) => {
     const order: Order = message.json;
-    const idempotency =
-      config.get("environment") === "development"
-        ? `${new Date().getTime()}`
-        : message.attributes.id;
 
     functions.logger.info(
       `${prefix} Sending client order created notification, order id: ${order.id}, client id: ${order.customer.id}`
     );
     const notification = await notificationClient.create({
       body: {
-        idempotency: idempotency,
+        idempotency: context.eventId,
         filters: {
           user: order.customer.id,
         },
@@ -47,19 +42,15 @@ const onOrderCreated = functions.pubsub
 
 const onOrderConfirmed = functions.pubsub
   .topic("order.confirmed")
-  .onPublish(async (message) => {
+  .onPublish(async (message, context) => {
     const order: Order = message.json;
-    const idempotency =
-      config.get("environment") === "development"
-        ? `${new Date().getTime()}`
-        : message.attributes.id;
 
     functions.logger.info(
       `${prefix} Sending client order confirmed notification, order id: ${order.id}, client id: ${order.customer.id}`
     );
     const notification = await notificationClient.create({
       body: {
-        idempotency: idempotency,
+        idempotency: context.eventId,
         filters: {
           user: order.customer.id,
         },
@@ -84,19 +75,15 @@ const onOrderConfirmed = functions.pubsub
 
 const onOrderDelivered = functions.pubsub
   .topic("order.delivered")
-  .onPublish(async (message) => {
+  .onPublish(async (message, context) => {
     const order: Order = message.json;
-    const idempotency =
-      config.get("environment") === "development"
-        ? `${new Date().getTime()}`
-        : message.attributes.id;
 
     functions.logger.info(
       `${prefix} Sending client order delivered notification, order id: ${order.id}, client id: ${order.customer.id}`
     );
     const notification = await notificationClient.create({
       body: {
-        idempotency: idempotency,
+        idempotency: context.eventId,
         filters: {
           user: order.customer.id,
         },
@@ -121,12 +108,8 @@ const onOrderDelivered = functions.pubsub
 
 const onOrderCancelled = functions.pubsub
   .topic("order.cancelled")
-  .onPublish(async (message) => {
+  .onPublish(async (message, context) => {
     const order: Order = message.json;
-    const idempotency =
-      config.get("environment") === "development"
-        ? `${new Date().getTime()}`
-        : message.attributes.id;
 
     if (
       order.cancellation_information?.executer === CancellationExecuter.SELLER
@@ -136,7 +119,7 @@ const onOrderCancelled = functions.pubsub
       );
       const notification = await notificationClient.create({
         body: {
-          idempotency: idempotency,
+          idempotency: context.eventId,
           filters: {
             user: order.customer.id,
           },
@@ -157,13 +140,15 @@ const onOrderCancelled = functions.pubsub
       functions.logger.info(
         `${prefix} Client order cancelled notification, was sent, notification id: ${notification.id}`
       );
-    } else if (order.cancellation_information?.executer === CancellationExecuter.CLIENT) {
+    } else if (
+      order.cancellation_information?.executer === CancellationExecuter.CLIENT
+    ) {
       functions.logger.info(
         `${prefix} Sending client order cancelled notification, order id: ${order.id}, client id: ${order.customer.id}`
       );
       const notification = await notificationClient.create({
         body: {
-          idempotency: idempotency,
+          idempotency: context.eventId,
           filters: {
             user: order.customer.id,
           },
