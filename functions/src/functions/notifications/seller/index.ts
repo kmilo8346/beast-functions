@@ -91,7 +91,7 @@ const onOrderDelivered = functions.pubsub
         },
         message: {
           title: "¡Orden entregada!",
-          body: `Hemos notificado a ${order.customer.first_name}, vamos por más 🤩`,
+          body: `Notificamos a ${order.customer.first_name}, vamos por más 🤩`,
           data: {
             beast_require_store: true,
             beast_route: "SellerOrderDetails",
