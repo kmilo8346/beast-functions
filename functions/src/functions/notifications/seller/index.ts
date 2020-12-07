@@ -23,7 +23,7 @@ const onOrderCreated = functions.pubsub
         },
         message: {
           title: "¡Nueva orden!",
-          body: "Tu cliente te espera 😅",
+          body: `${order.customer.first_name} te espera 😅`,
           data: {
             beast_require_store: true,
             beast_route: "SellerOrderDetails",
