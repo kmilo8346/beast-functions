@@ -27,7 +27,12 @@ const onStoreUpdated = functions.pubsub
         );
         const params = fields.reduce<{ [key: string]: any }>((p, field) => {
           if (field in store) {
-            p[field] = (store as { [key: string]: any })[field];
+            if (field === "delivery_area") {
+              p.address = store.delivery_area.center;
+              p.delivery_area = store.delivery_area.geometry;
+            } else {
+              p[field] = (store as { [key: string]: any })[field];
+            }
           }
           return p;
         }, {});
@@ -38,7 +43,7 @@ const onStoreUpdated = functions.pubsub
             script: {
               lang: "painless",
               source: `
-                for (field in params.entrySet()) {
+                for (field in params.keySet()) {
                   ctx._source.store_info[field] = params[field];
                 }
               `,
