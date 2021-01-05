@@ -25,15 +25,12 @@ const onStoreUpdated = functions.pubsub
         functions.logger.info(
           `${prefix} Store ${message.attributes.id} was updated, updating related products`
         );
-        const params = fields.reduce<{ [key: string]: any }>(
-          (params, field) => {
-            if (field in store) {
-              params[field] = (store as { [key: string]: any })[field];
-            }
-            return params;
-          },
-          {}
-        );
+        const params = fields.reduce<{ [key: string]: any }>((p, field) => {
+          if (field in store) {
+            p[field] = (store as { [key: string]: any })[field];
+          }
+          return p;
+        }, {});
         const response = await elastic.updateByQuery({
           index: "storeproducts",
           refresh: true,

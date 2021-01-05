@@ -97,7 +97,7 @@ class StoreProductClient {
         source: params.source,
       });
       if (searchResponse.hits.length) {
-        const alreadyCreated = searchResponse.hits[0] as StoreProduct;
+        const alreadyCreated = searchResponse.hits[0];
         functions.logger.info(
           `${prefix} A store product is already created, store product id ${alreadyCreated.id}, reference ${alreadyCreated.reference}`
         );
