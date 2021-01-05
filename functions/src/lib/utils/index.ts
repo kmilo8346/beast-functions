@@ -1,15 +1,16 @@
-import get from 'lodash.get';
-import set from 'lodash.set';
+import get from "lodash.get";
+import set from "lodash.set";
 
-import elastic from '../elastic';
+import elastic from "../elastic";
 import { Item } from "../../types";
 
 class Utils {
   public mapObject<T>(data: T, source: string[] | undefined): T {
     if (!source) return data;
+    const s = [...source, "id"];
 
     const result: { [key: string]: any } = {};
-    source.forEach((key) => {
+    s.forEach((key) => {
       set(result, key, get(data, key));
     });
     return result as T;
@@ -30,7 +31,7 @@ class Utils {
       {
         total: 0,
         ammount: 0,
-      },
+      }
     );
   }
 
@@ -43,7 +44,7 @@ class Utils {
       });
     }
   }
-  
+
   public formatDate(date: string | number | Date) {
     const d = new Date(date);
     let month = "" + (d.getMonth() + 1);
@@ -54,6 +55,11 @@ class Utils {
     if (day.length < 2) day = "0" + day;
 
     return [year, month, day].join("-");
+  }
+
+  public parseId(id: string) {
+    const parts = id.split("|");
+    return parts.length > 1 ? parts[1] : id;
   }
 }
 

@@ -1,7 +1,7 @@
-import { Expo } from 'expo-server-sdk';
+import { Expo } from "expo-server-sdk";
 import * as functions from "firebase-functions";
 
-import elastic from '../../elastic';
+import elastic from "../../elastic";
 import {
   CreateParams,
   CreateNotification,
@@ -9,12 +9,13 @@ import {
   Device,
   SearchParams,
   SearchResponse,
-} from '../../../types';
-import utils from '../../utils';
-import deviceClient from '../device';
+} from "../../../types";
+import utils from "../../utils";
+import deviceClient from "../device";
 
-const prefix = '[notification client]';
 const expo = new Expo();
+const index = "notifications";
+const prefix = "[notification client]";
 
 class NotificationClient {
   /**
@@ -27,10 +28,10 @@ class NotificationClient {
       // filters
       const must: any[] = [];
       if (params.filters) {
-        if ('idempotency' in params.filters) {
+        if ("idempotency" in params.filters) {
           must.push({
             match_phrase: {
-              'idempotency.keyword': {
+              "idempotency.keyword": {
                 query: params.filters.idempotency,
               },
             },
@@ -39,8 +40,8 @@ class NotificationClient {
       }
 
       // sort
-      let sort: { [key: string]: { order: 'desc' | 'asc' } }[] = [
-        { updated_at: { order: 'desc' } },
+      let sort: { [key: string]: { order: "desc" | "asc" } }[] = [
+        { updated_at: { order: "desc" } },
       ];
       if (params.sort) {
         sort = Object.keys(params.sort).map((field) => ({
@@ -49,7 +50,7 @@ class NotificationClient {
       }
 
       const response = await elastic.search({
-        index: 'notifications*',
+        index,
         body: {
           query: {
             bool: {
@@ -67,9 +68,9 @@ class NotificationClient {
         from: params.from,
         size: params.size,
         total: response.body.hits.total.value,
-        hits: response.body.hits.hits.map(({ _source, _id, _index }: any) => ({
+        hits: response.body.hits.hits.map(({ _source, _id }: any) => ({
           ..._source,
-          id: `${_index}|${_id}`,
+          id: _id,
         })),
       };
     } catch (error) {
@@ -85,7 +86,7 @@ class NotificationClient {
    * @param params
    */
   async create(
-    params: CreateParams<CreateNotification>,
+    params: CreateParams<CreateNotification>
   ): Promise<Notification> {
     try {
       // return notification if already created
@@ -94,16 +95,14 @@ class NotificationClient {
           filters: { idempotency: params.body.idempotency },
           from: 0,
           size: 1,
+          source: params.source,
         });
         if (searchNotificationsResponse.hits.length) {
           const alreadyCreated = searchNotificationsResponse.hits[0];
           functions.logger.info(
-            `${prefix} Notification is already created, returning notification, id ${alreadyCreated.id}`,
+            `${prefix} Notification is already created, returning notification, id ${alreadyCreated.id}`
           );
-          return utils.mapObject(
-            alreadyCreated,
-            params.source,
-          );
+          return alreadyCreated;
         }
       }
 
@@ -129,17 +128,8 @@ class NotificationClient {
         };
         await expo.sendPushNotificationsAsync([message]);
       }
-      
+
       // save notification object
-      const index = `notifications`;
-      await utils.createIndexIfNotExist(index, {
-        mappings: {
-          properties: {
-            created_at: { type: 'date' },
-            updated_at: { type: 'date' },
-          },
-        },
-      });
       const newNotification = {
         ...params.body,
         created_at: new Date(),
@@ -147,15 +137,15 @@ class NotificationClient {
       };
       const response = await elastic.index({
         index,
-        refresh: 'true',
+        refresh: "true",
         body: newNotification,
       });
       return utils.mapObject(
         {
           ...newNotification,
-          id: `${response.body._index}|${response.body._id}`,
+          id: response.body._id,
         },
-        params.source,
+        params.source
       );
     } catch (error) {
       functions.logger.debug({ params });

@@ -3,6 +3,7 @@ import * as functions from "firebase-functions";
 import elastic from "../../elastic";
 import { SearchParams, SearchResponse, Device } from "../../../types";
 
+const index = "devices";
 const prefix = "[device client]";
 
 class DeviceClient {
@@ -37,7 +38,7 @@ class DeviceClient {
       }
 
       const response = await elastic.search({
-        index: "devices*",
+        index,
         body: {
           query: {
             bool: {
@@ -55,9 +56,9 @@ class DeviceClient {
         from: params.from,
         size: params.size,
         total: response.body.hits.total.value,
-        hits: response.body.hits.hits.map(({ _source, _id, _index }: any) => ({
+        hits: response.body.hits.hits.map(({ _source, _id }: any) => ({
           ..._source,
-          id: `${_index}|${_id}`,
+          id: _id,
         })),
       };
     } catch (error) {
@@ -76,7 +77,7 @@ class DeviceClient {
   async deleteByToken(token: string): Promise<void> {
     try {
       const response = await elastic.deleteByQuery({
-        index: "devices*",
+        index,
         body: {
           query: {
             bool: {

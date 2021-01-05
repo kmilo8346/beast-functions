@@ -1,4 +1,4 @@
-import { ExpoPushMessage } from 'expo-server-sdk';
+import { ExpoPushMessage } from "expo-server-sdk";
 
 export interface CreateParams<T> {
   body: T;
@@ -24,7 +24,7 @@ export interface SearchParams {
   filters?: { [key: string]: any };
   from: number;
   size: number;
-  sort?: { [key: string]: 'asc' | 'desc' };
+  sort?: { [key: string]: "asc" | "desc" };
   source?: string[];
 }
 
@@ -33,7 +33,7 @@ export interface SearchResponse<T> {
   filters?: { [key: string]: any };
   from: number;
   size: number;
-  sort?: { [key: string]: 'asc' | 'desc' };
+  sort?: { [key: string]: "asc" | "desc" };
   total: number;
   hits: T[];
 }
@@ -44,7 +44,7 @@ export interface IntegerRange {
 }
 
 export interface Circle {
-  type: 'circle';
+  type: "circle";
   radius: string;
   coordinates: number[];
 }
@@ -67,9 +67,10 @@ export interface DeliveryArea {
 }
 
 export type OpeningHours = {
-  day: '1' | '2' | '3' | '4' | '5' | '6' | '7';
+  day: "1" | "2" | "3" | "4" | "5" | "6" | "7";
   open: number;
   close: number;
+  hours?: { open: number; close: number }[];
 }[];
 
 export interface AddressProp {
@@ -105,7 +106,7 @@ export interface CreateUser {
   photo_url?: string;
   current_address?: string;
   addresses?: Place[];
-  current_store?: string;
+  current_store?: string | null;
 }
 
 export interface User extends CreateUser {
@@ -134,7 +135,6 @@ export interface CreateStore {
 
 export interface Store extends CreateStore {
   id: string;
-  slug: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -147,22 +147,46 @@ export interface CreateProduct {
   enabled: boolean;
   reference: string;
   description?: string;
-  store_info: {
-    id: string;
-    enabled: boolean;
-    delivery_area: Circle;
-    opening_hours: OpeningHours;
-  };
 }
 
 export interface Product extends CreateProduct {
   id: string;
+  store: string;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface Item extends Product {
   qty: number;
+}
+
+export interface CreateStoreProduct {
+  id: string;
+  name: string;
+  price: number;
+  tags?: string[];
+  suggest: any;
+  images: string[];
+  enabled: boolean;
+  reference: string;
+  description?: string;
+  created_at: Date;
+  updated_at: Date;
+  store_info: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    images: string[];
+    address: Place;
+    delivery_area: Circle;
+    delivery_time: IntegerRange;
+    opening_hours: OpeningHours;
+  };
+}
+
+export interface StoreProduct extends CreateStoreProduct {
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface CreateOrder {
@@ -189,20 +213,20 @@ export interface CreateOrder {
 }
 
 export enum OrderStatus {
-  CREATED = 'created',
-  CONFIRMED = 'confirmed',
-  DELIVERED = 'delivered',
-  CANCELLED = 'cancelled',
+  CREATED = "created",
+  CONFIRMED = "confirmed",
+  DELIVERED = "delivered",
+  CANCELLED = "cancelled",
 }
 
 export enum CancellationExecuter {
-  CLIENT = 'client',
-  SELLER = 'seller',
-  BEAST = 'beast',
+  CLIENT = "client",
+  SELLER = "seller",
+  BEAST = "beast",
 }
 
 export enum CancellationReason {
-  INACTIVITY = 'inactivity',
+  INACTIVITY = "inactivity",
 }
 
 export interface Order extends CreateOrder {
@@ -235,7 +259,7 @@ export interface NotificationFilters {
   user: string;
 }
 
-export interface NotificationMessage extends Omit<ExpoPushMessage, 'to'> {}
+export interface NotificationMessage extends Omit<ExpoPushMessage, "to"> {}
 
 export interface CreateNotification {
   idempotency: string;
