@@ -99,11 +99,11 @@ export interface CreateUser {
   id?: string;
   phone: string;
   phone_verified: boolean;
-  email?: string;
+  email?: string | null;
   email_verified?: boolean;
   first_name?: string;
-  last_name?: string;
-  photo_url?: string;
+  last_name?: string | null;
+  photo_url?: string | null;
   current_address?: string;
   addresses?: Place[];
   current_store?: string | null;
@@ -193,10 +193,10 @@ export interface CreateOrder {
   idempotency: string;
   customer: {
     id: string;
-    email?: string;
+    email?: string | null;
     first_name: string;
-    last_name?: string;
-    photo_url?: string;
+    last_name?: string | null;
+    photo_url?: string | null;
     phone: string;
     created_at?: Date;
   };
