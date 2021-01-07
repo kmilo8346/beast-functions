@@ -160,18 +160,8 @@ export interface Item extends Product {
   qty: number;
 }
 
-export interface CreateStoreProduct {
-  id: string;
-  name: string;
-  price: number;
-  tags?: string[];
+export interface StoreProduct extends Product {
   suggest: any;
-  images: string[];
-  enabled: boolean;
-  reference: string;
-  description?: string;
-  created_at: Date;
-  updated_at: Date;
   store_info: {
     id: string;
     name: string;
@@ -182,11 +172,6 @@ export interface CreateStoreProduct {
     delivery_time: IntegerRange;
     opening_hours: OpeningHours;
   };
-}
-
-export interface StoreProduct extends CreateStoreProduct {
-  created_at: Date;
-  updated_at: Date;
 }
 
 export interface CreateOrder {

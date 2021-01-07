@@ -79,10 +79,10 @@ const onStoreUpdated = functions.pubsub
 const onProductCreated = functions.pubsub
   .topic("product.created")
   .onPublish(async (message) => {
-    const { store: storeId, ...product }: Product = message.json;
+    const product: Product = message.json;
 
     try {
-      const store = await storeClient.get(storeId, [
+      const store = await storeClient.get(product.store, [
         "id",
         "name",
         "enabled",
@@ -135,8 +135,7 @@ const onProductUpdated = functions.pubsub
     const product: Product = message.json;
 
     try {
-      // dont save store prop
-      const { id, store, ...body } = product;
+      const { id, ...body } = product;
       await storeProductClient.update(id, { body });
     } catch (error) {
       functions.logger.debug({ product });
