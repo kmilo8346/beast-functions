@@ -96,17 +96,6 @@ const onProductCreated = functions.pubsub
       await storeProductClient.create({
         body: {
           ...product,
-          suggest: {
-            input: [product.name, ...(product.tags || [])],
-            contexts: {
-              store_location: [
-                {
-                  lat: store.delivery_area.center.location.lat,
-                  lon: store.delivery_area.center.location.lon,
-                },
-              ],
-            },
-          },
           store_info: {
             id: store.id,
             name: store.name,
