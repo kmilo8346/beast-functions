@@ -26,16 +26,35 @@ export interface SearchParams {
   size: number;
   sort?: { [key: string]: "asc" | "desc" };
   source?: string[];
+  collapse?: {
+    field: string;
+    inner_hits?: {
+      name: string;
+      size?: number;
+      sort?: string[];
+      _source?: string[] | boolean;
+    };
+  };
 }
 
 export interface SearchResponse<T> {
-  query?: string;
-  filters?: { [key: string]: any };
   from: number;
   size: number;
-  sort?: { [key: string]: "asc" | "desc" };
   total: number;
-  hits: T[];
+  hits: (T & { inner_hits?: T[] })[];
+  sort?: { [key: string]: "asc" | "desc" };
+  query?: string;
+  source?: string[];
+  filters?: { [key: string]: any };
+  collapse?: {
+    field: string;
+    inner_hits?: {
+      name: string;
+      size?: number;
+      sort?: string[];
+      _source?: string[] | boolean;
+    };
+  };
 }
 
 export interface IntegerRange {
@@ -167,6 +186,7 @@ export interface StoreProduct extends Product {
     enabled: boolean;
     images: string[];
     address: Place;
+    created_at: Date;
     delivery_area: Circle;
     delivery_time: IntegerRange;
     opening_hours: OpeningHours;
@@ -275,5 +295,57 @@ export interface CreateMercadoPagoCheckout {
       payment_provider: PaymentProvider;
     };
     amount: number;
+  };
+}
+
+export enum WidgetType {
+  STORE_HORIZONTAL_LIST = "store_horizontal_list",
+  STORE_VERTICAL_LIST = "store_vertical_list",
+}
+
+export interface CreateWidget {
+  type: WidgetType;
+  tags: string[];
+  order: number;
+  instructions: { [key: string]: any };
+}
+
+export interface Widget extends CreateWidget {
+  id: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface StoreHorizontalListWidget extends Widget {
+  type: WidgetType.STORE_HORIZONTAL_LIST;
+  instructions: {
+    title: string;
+    search: SearchParams;
+  };
+}
+
+export interface StoreVerticalListWidget extends Widget {
+  type: WidgetType.STORE_VERTICAL_LIST;
+  instructions: {
+    search: SearchParams;
+  };
+}
+
+export interface RenderedWidget {
+  id: string;
+  type: WidgetType;
+  data: { [key: string]: any };
+}
+
+export interface StoreHorizontalListRenderedWidget extends RenderedWidget {
+  data: {
+    title: string;
+    response: SearchResponse<StoreProduct>;
+  };
+}
+
+export interface StoreVerticalListRenderedWidget extends RenderedWidget {
+  data: {
+    response: SearchResponse<StoreProduct>;
   };
 }

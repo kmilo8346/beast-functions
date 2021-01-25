@@ -19,6 +19,7 @@ const onStoreUpdated = functions.pubsub
       "delivery_area",
       "delivery_time",
       "opening_hours",
+      "created_at",
     ];
     try {
       if (fields.some((field) => field in store)) {
@@ -88,6 +89,7 @@ const onProductCreated = functions.pubsub
         "enabled",
         "images",
         "address",
+        "created_at",
         "delivery_area",
         "delivery_time",
         "opening_hours",
@@ -101,6 +103,7 @@ const onProductCreated = functions.pubsub
             name: store.name,
             enabled: store.enabled,
             images: store.images,
+            created_at: store.created_at,
             address: store.delivery_area.center,
             delivery_area: store.delivery_area.geometry,
             delivery_time: store.delivery_time,
