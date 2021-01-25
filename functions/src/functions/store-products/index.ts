@@ -3,6 +3,7 @@ import * as functions from "firebase-functions";
 import elastic from "../../lib/elastic";
 import { Product, Store } from "../../types";
 import storeClient from "../../lib/clients/store";
+import productClient from "../../lib/clients/product";
 import storeProductClient from "../../lib/clients/store-product";
 
 const prefix = "[store products]";
@@ -15,18 +16,33 @@ const onStoreUpdated = functions.pubsub
       "name",
       "enabled",
       "images",
-      "address",
       "delivery_area",
       "delivery_time",
       "opening_hours",
-      "created_at",
     ];
     try {
       if (fields.some((field) => field in store)) {
         functions.logger.info(
-          `${prefix} Store ${message.attributes.id} was updated, updating related products`
+          `${prefix} Store ${message.attributes.id} was updated, updating related store products`
         );
-        const params = fields.reduce<{ [key: string]: any }>((p, field) => {
+
+        // getting products in store
+        let from = 0;
+        let response;
+        const products: Product[] = [];
+        do {
+          response = await productClient.search({
+            from,
+            size: 10,
+            source: ["id"],
+            filters: { store: message.attributes.id },
+          });
+          products.push(...response.hits);
+          from += response.hits.length;
+        } while (from < response.total);
+
+        // update
+        const update = fields.reduce<{ [key: string]: any }>((p, field) => {
           if (field in store) {
             if (field === "delivery_area") {
               p.address = store.delivery_area.center;
@@ -37,37 +53,31 @@ const onStoreUpdated = functions.pubsub
           }
           return p;
         }, {});
-        const response = await elastic.updateByQuery({
-          index: "storeproducts",
-          refresh: true,
-          body: {
-            script: {
-              lang: "painless",
-              source: `
-                for (field in params.keySet()) {
-                  ctx._source.store_info[field] = params[field];
-                }
-              `,
-              params,
-            },
-            query: {
-              bool: {
-                must: [
-                  {
-                    match_phrase: {
-                      "store_info.id.keyword": {
-                        query: message.attributes.id,
-                      },
-                    },
-                  },
-                ],
-              },
-            },
-          },
+
+        // bulk update
+        const payload: any[] = [];
+        products.forEach((product) => {
+          payload.push({
+            update: { _id: product.id, _index: "storeproducts" },
+          });
+          payload.push({ doc: { store_info: update } });
         });
-        functions.logger.info(
-          `${prefix} Products updated ${response.body.updated}`
-        );
+
+        if (payload.length) {
+          const { body } = await elastic.bulk({
+            refresh: "true",
+            body: payload,
+          });
+
+          if (body.errors) {
+            functions.logger.warn(`${prefix} Error in bulk updates`);
+            functions.logger.debug({ body });
+          } else {
+            functions.logger.info(`${prefix} Store products updated`);
+          }
+        } else {
+          functions.logger.info(`${prefix} Nothing to update`);
+        }
       }
     } catch (error) {
       functions.logger.debug({ store });
