@@ -108,6 +108,9 @@ const onProductCreated = functions.pubsub
       await storeProductClient.create({
         body: {
           ...product,
+          stats: {
+            number_of_times_in_orders: 0,
+          },
           store_info: {
             id: store.id,
             name: store.name,
