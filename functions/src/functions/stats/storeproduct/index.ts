@@ -15,8 +15,8 @@ const onOrderCreated = functions.pubsub
     // generating stats
     const product_stats = order.transaction.shopping_cart.items.reduce<{
       [key: string]: { number_of_times_in_orders: number };
-    }>((product_stats, item) => {
-      const s = { ...product_stats };
+    }>((ps, item) => {
+      const s = { ...ps };
       s[item.id] = s[item.id] || { number_of_times_in_orders: 0 };
       s[item.id].number_of_times_in_orders += 1;
       return s;
