@@ -118,7 +118,9 @@ class NotificationClient {
       // send notifications using expo tokens
       const hash: { [key: string]: boolean } = {};
       searchDevicesResponse.hits.forEach((device: Device) => {
-        hash[device.token] = true;
+        if (device.token) {
+          hash[device.token] = true;
+        }
       });
       const tokens = Object.keys(hash);
       if (tokens.length) {

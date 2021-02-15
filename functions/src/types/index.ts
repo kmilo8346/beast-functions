@@ -87,9 +87,7 @@ export interface DeliveryArea {
 
 export type OpeningHours = {
   day: "1" | "2" | "3" | "4" | "5" | "6" | "7";
-  open: number;
-  close: number;
-  hours?: { open: number; close: number }[];
+  hours: { open: number; close: number }[];
 }[];
 
 export interface AddressProp {
@@ -253,8 +251,17 @@ export interface Order extends CreateOrder {
 }
 
 export interface CreateDevice {
-  token: string;
-  user_id: string;
+  platform: string;
+  platform_version: string;
+  app_version: string | null;
+  app_build_version: string | null;
+  token: string | null;
+  user_id: string | null;
+  user_location: {
+    lat: number;
+    lon: number;
+  } | null;
+  user_current_store: string | null;
 }
 
 export interface Device extends CreateDevice {
@@ -305,6 +312,7 @@ export interface CreateMercadoPagoCheckout {
 export enum WidgetType {
   STORE_HORIZONTAL_LIST = "store_horizontal_list",
   STORE_VERTICAL_LIST = "store_vertical_list",
+  PRODUCT_HORIZONTAL_LIST = "product_horizontal_list",
 }
 
 export interface CreateWidget {
@@ -335,6 +343,15 @@ export interface StoreVerticalListWidget extends Widget {
   };
 }
 
+export interface ProductHorizontalListWidget extends Widget {
+  type: WidgetType.PRODUCT_HORIZONTAL_LIST;
+  instructions: {
+    title: string;
+    search: SearchParams;
+    min_allowed: number;
+  };
+}
+
 export interface RenderedWidget {
   id: string;
   type: WidgetType;
@@ -350,6 +367,13 @@ export interface StoreHorizontalListRenderedWidget extends RenderedWidget {
 
 export interface StoreVerticalListRenderedWidget extends RenderedWidget {
   data: {
+    response: SearchResponse<StoreProduct>;
+  };
+}
+
+export interface ProductHorizontalListRenderedWidget extends RenderedWidget {
+  data: {
+    title: string;
     response: SearchResponse<StoreProduct>;
   };
 }
