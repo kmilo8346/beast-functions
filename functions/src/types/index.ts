@@ -118,7 +118,7 @@ export interface CreateUser {
   phone_verified: boolean;
   email?: string | null;
   email_verified?: boolean;
-  first_name?: string;
+  first_name?: string | null;
   last_name?: string | null;
   photo_url?: string | null;
   current_address?: string;
@@ -251,6 +251,7 @@ export interface Order extends CreateOrder {
 }
 
 export interface CreateDevice {
+  id?: string;
   platform: string;
   platform_version: string;
   app_version: string | null;
