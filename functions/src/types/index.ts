@@ -180,7 +180,10 @@ export interface Item extends Product {
 export interface StoreProduct extends Product {
   stats: {
     // number of times a product is found in orders
-    number_of_times_in_orders: number;
+    number_of_times_in_orders: number; // deprecated
+
+    order_messages: number;
+    product_messages: number;
   };
   store_info: {
     id: string;
