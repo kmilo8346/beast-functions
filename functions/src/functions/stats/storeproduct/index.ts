@@ -59,54 +59,61 @@ const onOrderCreated = functions.pubsub
 const onSendOrderMessage = functions.analytics
   .event("send_order_message")
   .onLog(async (event) => {
+    // TODO: removing debug code
+    functions.logger.debug(`${prefix}`, event.params);
+
     const order = event.params as {
       store_id: string;
       store_name: string;
-      products: {
-        id: string;
-        name: string;
-        price: number;
-        qty: number;
-      }[];
       stats_ammount: number;
       stats_total: number;
+      [x: string]: any; // items_${i} = '${id}|${price}|${qty}'
     };
+    const items: string[] = [];
+    let i = 0;
+    while (true) {
+      if (`items_${i}` in order) {
+        const [id] = order[`items_${i}`].split("|");
+        items.push(id);
+        break;
+      }
+      i++;
+    }
 
     functions.logger.info(
       `${prefix} Generating stats from send order message event`
     );
-    functions.logger.info(order);
 
-    // // creating bulk payload
-    // const payload: any[] = [];
-    // order.products.forEach((p) => {
-    //   payload.push({
-    //     update: { _id: p.id, _index: "storeproducts" },
-    //   });
-    //   payload.push({
-    //     script: {
-    //       source: "ctx._source.stats.order_messages += 1",
-    //       lang: "painless",
-    //     },
-    //   });
-    // });
+    // creating bulk payload
+    const payload: any[] = [];
+    items.forEach((id) => {
+      payload.push({
+        update: { _id: id, _index: "storeproducts" },
+      });
+      payload.push({
+        script: {
+          source: "ctx._source.stats.order_messages += 1",
+          lang: "painless",
+        },
+      });
+    });
 
-    // // executing bulk request
-    // if (payload.length) {
-    //   const { body } = await elastic.bulk({
-    //     refresh: "true",
-    //     body: payload,
-    //   });
+    // executing bulk request
+    if (payload.length) {
+      const { body } = await elastic.bulk({
+        refresh: "true",
+        body: payload,
+      });
 
-    //   if (body.errors) {
-    //     functions.logger.warn("Warning updating stats in store products");
-    //     functions.logger.debug(body);
-    //   } else {
-    //     functions.logger.info(`${prefix} Stats were generated`);
-    //   }
-    // } else {
-    //   functions.logger.error("Nothing to update, hmm that is a posible bug");
-    // }
+      if (body.errors) {
+        functions.logger.warn("Warning updating stats in store products");
+        functions.logger.debug(body);
+      } else {
+        functions.logger.info(`${prefix} Stats were generated`);
+      }
+    } else {
+      functions.logger.error("Nothing to update, hmm that is a posible bug");
+    }
   });
 
 export default {
