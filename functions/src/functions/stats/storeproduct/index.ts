@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 import { Order } from "../../../types";
 import elastic from "../../../lib/elastic";
 
-const prefix = "[stats]";
+const prefix = "[store product stats]";
 
 const onOrderCreated = functions.pubsub
   .topic("order.created")
