@@ -117,9 +117,6 @@ const onSendOrderMessage = functions.analytics
 const onSendProductMessage = functions.analytics
   .event("send_product_message")
   .onLog(async (event) => {
-    // TODO: removing debug code
-    functions.logger.debug(`${prefix}`, event.params);
-
     const request = event.params as {
       store_id: string;
       store_name: string;
