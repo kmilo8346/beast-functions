@@ -69,11 +69,12 @@ const onSendOrderMessage = functions.analytics
     const items: string[] = [];
     let i = 0;
     while (true) {
-      if (`items_${i}` in order) {
-        const [id] = order[`items_${i}`].split("|");
-        items.push(id);
+      if (!(`items_${i}` in order)) {
         break;
       }
+
+      const [id] = order[`items_${i}`].split("|");
+      items.push(id);
       i++;
     }
 
