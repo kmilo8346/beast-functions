@@ -59,9 +59,6 @@ const onOrderCreated = functions.pubsub
 const onSendOrderMessage = functions.analytics
   .event("send_order_message")
   .onLog(async (event) => {
-    // TODO: removing debug code
-    functions.logger.debug(`${prefix}`, event.params);
-
     const order = event.params as {
       store_id: string;
       store_name: string;
@@ -116,7 +113,41 @@ const onSendOrderMessage = functions.analytics
     }
   });
 
+const onSendProductMessage = functions.analytics
+  .event("send_product_message")
+  .onLog(async (event) => {
+    // TODO: removing debug code
+    functions.logger.debug(`${prefix}`, event.params);
+
+    const request = event.params as {
+      store_id: string;
+      store_name: string;
+      product_id: string;
+      product_name: string;
+      product_price: string;
+    };
+
+    functions.logger.info(
+      `${prefix} Generating stats from send product message event`
+    );
+
+    // executing request
+    await elastic.update({
+      index: "storeproducts",
+      id: request.product_id,
+      body: {
+        script: {
+          lang: "painless",
+          source: "ctx._source.stats.product_messages += 1",
+        },
+      },
+    });
+
+    functions.logger.info(`${prefix} Stats were generated`);
+  });
+
 export default {
   onOrderCreated,
   onSendOrderMessage,
+  onSendProductMessage,
 };
