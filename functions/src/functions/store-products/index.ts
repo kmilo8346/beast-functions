@@ -109,8 +109,6 @@ const onProductCreated = functions.pubsub
         body: {
           ...product,
           stats: {
-            number_of_times_in_orders: 0, // deprecated
-
             order_messages: 0,
             product_messages: 0,
           },
