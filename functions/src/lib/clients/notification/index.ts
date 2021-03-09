@@ -1,23 +1,43 @@
-import { Expo } from "expo-server-sdk";
 import * as functions from "firebase-functions";
 
 import elastic from "../../elastic";
 import {
-  CreateParams,
-  CreateNotification,
   Notification,
-  Device,
   SearchParams,
   SearchResponse,
+  UpdateParams,
 } from "../../../types";
 import utils from "../../utils";
-import deviceClient from "../device";
 
-const expo = new Expo();
 const index = "notifications";
 const prefix = "[notification client]";
 
 class NotificationClient {
+  /**
+   * Get notification
+   * @param id string
+   * @param source string[]
+   * @returns Promise<Notification>
+   */
+  public async get(id: string, source?: string[]): Promise<Notification> {
+    try {
+      const response = await elastic.get({
+        id,
+        index,
+        _source: source,
+      });
+      return {
+        ...response.body._source,
+        id: response.body._id,
+      };
+    } catch (error) {
+      functions.logger.debug({ id, source });
+      functions.logger.error(error);
+
+      throw new Error(`${prefix} Unexpected error getting notification`);
+    }
+  }
+
   /**
    * Search notifications
    * @param params SearchParams
@@ -82,78 +102,40 @@ class NotificationClient {
   }
 
   /**
-   * Create a notification
-   * @param params
+   * Update a notification
+   * @param id string
+   * @param params UpdateParams<Notification>
+   * @returns Promise<Partial<Notification>>
    */
-  async create(
-    params: CreateParams<CreateNotification>
-  ): Promise<Notification> {
+  async update(
+    id: string,
+    params: UpdateParams<Notification>
+  ): Promise<Partial<Notification>> {
     try {
-      // return notification if already created
-      if (params.body.idempotency) {
-        const searchNotificationsResponse = await this.search({
-          filters: { idempotency: params.body.idempotency },
-          from: 0,
-          size: 1,
-          source: params.source,
-        });
-        if (searchNotificationsResponse.hits.length) {
-          const alreadyCreated = searchNotificationsResponse.hits[0];
-          functions.logger.info(
-            `${prefix} Notification is already created, returning notification, id ${alreadyCreated.id}`
-          );
-          return alreadyCreated;
-        }
-      }
-
-      // find devices to send notification
-      const searchDevicesResponse = await deviceClient.search({
-        filters: {
-          user: params.body.filters.user,
-        },
-        from: 0,
-        size: 100,
-      });
-
-      // send notifications using expo tokens
-      const hash: { [key: string]: boolean } = {};
-      searchDevicesResponse.hits.forEach((device: Device) => {
-        if (device.token) {
-          hash[device.token] = true;
-        }
-      });
-      const tokens = Object.keys(hash);
-      if (tokens.length) {
-        const message = {
-          to: tokens,
-          ...params.body.message,
-        };
-        await expo.sendPushNotificationsAsync([message]);
-      }
-
-      // save notification object
-      const newNotification = {
+      const update = {
         ...params.body,
-        created_at: new Date(),
         updated_at: new Date(),
       };
-      const response = await elastic.index({
+      await elastic.update({
+        id,
         index,
-        refresh: "true",
-        body: newNotification,
+        body: {
+          doc: update,
+        },
       });
+
       return utils.mapObject(
         {
-          ...newNotification,
-          id: response.body._id,
+          ...update,
+          id,
         },
         params.source
       );
     } catch (error) {
-      functions.logger.debug({ params });
+      functions.logger.debug({ id, params });
       functions.logger.error(error);
 
-      throw new Error(`${prefix} Unexpected error creating a notification`);
+      throw new Error(`${prefix} Unexpected error updating notification`);
     }
   }
 }

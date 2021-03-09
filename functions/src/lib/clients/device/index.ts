@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 
 import elastic from "../../elastic";
+import utils from "../../utils";
 import { SearchParams, SearchResponse, Device } from "../../../types";
 
 const index = "devices";
@@ -14,13 +15,43 @@ class DeviceClient {
   async search(params: SearchParams): Promise<SearchResponse<Device>> {
     try {
       // filters
-      const must: any[] = [];
+      const query: any = {
+        bool: {
+          must: [],
+          filter: [],
+          must_not: [],
+        },
+      };
       if (params.filters) {
         if ("user" in params.filters) {
-          must.push({
+          query.bool.must.push({
             match_phrase: {
               "user_id.keyword": {
                 query: params.filters.user,
+              },
+            },
+          });
+        }
+        if ("area" in params.filters) {
+          query.bool.filter.push({
+            geo_distance: {
+              distance: params.filters.area.radius,
+              user_location: params.filters.area.coordinates,
+            },
+          });
+        }
+        if ("token_exists" in params.filters) {
+          query.bool.must.push({
+            exists: {
+              field: "token.keyword",
+            },
+          });
+        }
+        if ("app_version_gte" in params.filters) {
+          query.bool.must.push({
+            range: {
+              app_version_num: {
+                gte: utils.convertVersionToInt(params.filters.app_version_gte),
               },
             },
           });
@@ -40,11 +71,7 @@ class DeviceClient {
       const response = await elastic.search({
         index,
         body: {
-          query: {
-            bool: {
-              must,
-            },
-          },
+          query,
           sort,
           from: params.from,
           size: params.size,
@@ -66,40 +93,6 @@ class DeviceClient {
       functions.logger.error(error);
 
       throw new Error(`${prefix} Unexpected error searching devices`);
-    }
-  }
-
-  /**
-   * Delete devices by token
-   * @param token string
-   * @returns Promise<void>
-   */
-  async deleteByToken(token: string): Promise<void> {
-    try {
-      const response = await elastic.deleteByQuery({
-        index,
-        body: {
-          query: {
-            bool: {
-              must: [
-                {
-                  match_phrase: {
-                    "token.keyword": {
-                      query: token,
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        },
-      });
-      functions.logger.info("deleteByToken", JSON.stringify(response));
-    } catch (error) {
-      functions.logger.debug({ token });
-      functions.logger.error(error);
-
-      throw new Error(`${prefix} Unexpected error deleting devices by token`);
     }
   }
 }
