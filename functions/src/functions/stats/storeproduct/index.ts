@@ -87,6 +87,7 @@ const onSendProductMessage = functions.analytics
           source: "ctx._source.stats.product_messages += 1",
         },
       },
+      refresh: "true",
     });
 
     functions.logger.info(`${prefix} Stats were generated`);

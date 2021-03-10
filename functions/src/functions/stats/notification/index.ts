@@ -23,6 +23,7 @@ const onNotificationOpen = functions.analytics
           source: "ctx._source.stats.notification_open += 1",
         },
       },
+      refresh: "true",
     });
     functions.logger.info(`${prefix} Stats were generated 😊`);
   });
@@ -60,6 +61,7 @@ const onSendOrderMessage = functions.analytics
           source: "ctx._source.stats.send_order_message += 1",
         },
       },
+      refresh: "true",
     });
     functions.logger.info(`${prefix} Stats were generated 😊`);
   });
@@ -97,6 +99,7 @@ const onSendProductMessage = functions.analytics
           source: "ctx._source.stats.send_product_message += 1",
         },
       },
+      refresh: "true",
     });
     functions.logger.info(`${prefix} Stats were generated 😊`);
   });
@@ -131,6 +134,7 @@ const onSendStoreQuestionMessage = functions.analytics
           source: "ctx._source.stats.send_store_question_message += 1",
         },
       },
+      refresh: "true",
     });
     functions.logger.info(`${prefix} Stats were generated 😊`);
   });

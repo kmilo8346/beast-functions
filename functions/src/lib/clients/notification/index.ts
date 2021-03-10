@@ -122,6 +122,7 @@ class NotificationClient {
         body: {
           doc: update,
         },
+        refresh: "true",
       });
 
       return utils.mapObject(

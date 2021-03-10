@@ -142,6 +142,7 @@ class StoreProductClient {
         body: {
           doc: params.body,
         },
+        refresh: "true",
       });
 
       return utils.mapObject(
